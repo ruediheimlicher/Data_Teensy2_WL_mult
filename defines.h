@@ -68,6 +68,7 @@
 
 #define WL_DATA_PENDENT    4
 
+#define WL_MESSUNG_PENDENT 3
 
 
 

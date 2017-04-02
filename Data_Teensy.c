@@ -1606,6 +1606,7 @@ int main (void)
             //wl_spi_status &= ~(1<<WL_DATA_PENDENT);    // reset, not busy
             
             wl_module_config_register(STATUS, (1<<TX_DS)); //Clear Interrupt Bit
+            
             wl_module_config_register(STATUS, (1<<MAX_RT)); // Clear Interrupt Bit
             wl_blockedcounter++;
             if (wl_blockedcounter>10)
@@ -1692,7 +1693,8 @@ int main (void)
 // **********************************************************
       #pragma mark Mess-Intervall
 // **********************************************************
-      
+      uint16_t adcwert=0;
+      float adcfloat=0;
       if (hoststatus & (1<<MESSUNG_OK)) // Intervall abgelaufen. In ISR gesetzt, Messungen vornehmen
       {
          /*
@@ -1775,7 +1777,7 @@ int main (void)
          lcd_putc(' ');
          
          
-         uint16_t adcwert = adc_read(0);
+         adcwert = adc_read(0);
          
          //_delay_ms(100);
          
@@ -1922,7 +1924,7 @@ int main (void)
          // lcd_putc(' ');
          //OSZIA_LO;
          
-         double adcfloat = adcwert;
+         
          adcfloat = adcfloat *2490/1024; // kalibrierung VREF, 1V > 0.999, Faktor 10, 45 us
          
          adcwert = (((uint16_t)adcfloat)&0xFFFF);
@@ -1938,6 +1940,14 @@ int main (void)
          //messungcounter++;
          messungcounter ++; // 8 Werte geschrieben, naechste zeile
          
+         wl_spi_status |= (1<<WL_SEND_REQUEST); // Auftrag an wl
+
+      }
+      
+      // wl_devices aufrufen, Daten lesen
+      
+      if (wl_spi_status & (1<<WL_SEND_REQUEST))
+      {
          
          // WL write start
          
@@ -1976,9 +1986,11 @@ int main (void)
          
          if ((wl_spi_status & (1<<WL_DATA_PENDENT))) //  busy
          {
+            
             wl_blockedcounter++;
             if (wl_blockedcounter>10)
             {
+               
                wl_spi_status &= ~(1<<WL_DATA_PENDENT);
                wl_blockedcounter = 0;
 
@@ -1993,7 +2005,7 @@ int main (void)
             
             wl_spi_status |= (1<<WL_DATA_PENDENT);
             
-            OSZIA_LO; // 30 ms bis lesen
+            //OSZIA_LO; // 30 ms bis lesen
             
             // **********************************************************
             
@@ -2095,6 +2107,9 @@ int main (void)
             }
          }// if ! WL_DATA_PENDENT
          
+         
+         // end wl_spi_status |= (1<<WL_SEND_REQUEST); // Auftrag an wl
+         wl_spi_status &= ~(1<<WL_SEND_REQUEST); // Auftrag an wl erfuellt
          // next pipe
          
          /*
