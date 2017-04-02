@@ -2325,13 +2325,10 @@ int main (void)
              lcd_putc('*');
              lcd_puthex(usb_configured());
              */
-            
          }
-         
          
          if(loopcount1%32 == 0)
          {
-            
             
 #pragma mark Sensors
             // Temperatur messen mit DS18S20
