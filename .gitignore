@@ -10,7 +10,7 @@ build/*
 *.o
 .dep
 build
-CNC.xcodeproj
+*.xcodeproj
 Info.plist
 applet
 PkgInfo
@@ -23,3 +23,6 @@ AVR_Tem.c
 runavarice.sh
 *Datum_Version_aktualisieren*
 */mag/*
+Log*
+Makefile
+crc8.*
