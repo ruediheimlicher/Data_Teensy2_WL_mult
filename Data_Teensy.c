@@ -1616,8 +1616,16 @@ int main (void)
                   wl_blockedcounter = 0;
                   
                }
+               if (loop_pipenummer < 3)
+               {
+                  loop_pipenummer++;
+               }
+               else
+               {
+                  loop_pipenummer=1;
+                  wl_spi_status |= (1<<WL_SEND_REQUEST);
+               }
                
-               loop_pipenummer=2;
                
                wl_module_CE_hi;
                _delay_us(15);
@@ -1951,7 +1959,7 @@ int main (void)
 
       // wl_devices aufrufen, Daten lesen
       
-      if (wl_spi_status & (1<<WL_SEND_REQUEST))
+      if (wl_spi_status & (1<<WL_SEND_REQUEST)) // Vom Timer gesetzt, naechste Messung-Runde
       {
          
          // WL write start
@@ -1959,6 +1967,8 @@ int main (void)
          
          wl_module_tx_config(wl_module_TX_NR_2);
          
+         //wl_module_tx_config(loop_pipenummer); // aktuelle pipenummer
+        
          // WL
          uint8_t k;
          for (k=9; k<wl_module_PAYLOAD; k++)
@@ -1981,7 +1991,7 @@ int main (void)
          payload[10] = adcwert & 0x00FF;
          payload[11] = (adcwert & 0xFF00)>>8;
          
-         if ((wl_spi_status & (1<<WL_DATA_PENDENT))) //  busy
+         if ((wl_spi_status & (1<<WL_DATA_PENDENT))) //  busy, warten
          {
             
             wl_blockedcounter++;
@@ -2078,14 +2088,23 @@ int main (void)
                lcd_gotoxy(18,2);
                lcd_puts("rt");
                
-               
+               wl_module_config_register(STATUS, (1<<TX_DS)); //Clear Interrupt Bit
                wl_module_config_register(STATUS, (1<<MAX_RT));	// Clear Interrupt Bit
                wl_module_CE_hi;								// Start transmission
                _delay_us(50);
                wl_module_CE_lo;
                
                wl_module_rx_config();
-               loop_pipenummer=5;
+               if (loop_pipenummer < 3)
+               {
+                  loop_pipenummer++;
+               }
+               else
+               {
+                  loop_pipenummer=1;
+                  wl_spi_status |= (1<<WL_SEND_REQUEST);
+               }
+
 
                
             }
@@ -2276,7 +2295,12 @@ int main (void)
          lcd_puthex(wl_blockedcounter);
          lcd_putc(' ');
          lcd_putc('p');
-         lcd_puthex(loop_pipenummer);
+         lcd_puthex(pipenummer);
+         lcd_putc(' ');
+         lcd_putc('l');
+         lcd_putc('p');
+         lcd_puthex(pipenummer);
+        
          if (usbstatus & (1<<WRITEAUTO))
          {
             uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
