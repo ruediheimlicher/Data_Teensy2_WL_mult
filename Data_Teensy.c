@@ -1601,6 +1601,7 @@ int main (void)
                
                wl_spi_status &= ~(1<<WL_DATA_PENDENT);    // Data angekommen, not busy
                
+               
                PTX=0;
             }                    // if RX_DR
             
@@ -1624,7 +1625,7 @@ int main (void)
                
                wl_module_config_register(STATUS, (1<<MAX_RT)); // Clear Interrupt Bit
                wl_blockedcounter++;
-               if (wl_blockedcounter>10)
+               if (wl_blockedcounter>2)
                {
                   lcd_gotoxy(16,3);
                   lcd_putc('x');
@@ -2001,11 +2002,11 @@ int main (void)
          payload[10] = adcwert & 0x00FF;
          payload[11] = (adcwert & 0xFF00)>>8;
          
-         if ((wl_spi_status & (1<<WL_DATA_PENDENT))) //  busy
+         if ((wl_spi_status & (1<<WL_DATA_PENDENT))) //  busy oder remote nicht da
          {
             
             wl_blockedcounter++;
-            if (wl_blockedcounter>10)
+            if (wl_blockedcounter>2)
             {
                lcd_gotoxy(16,3);
                lcd_putc('z');
