@@ -1490,10 +1490,6 @@ int main (void)
             //}
             // MARK: WL Loop
             
-            
-            //lcd_gotoxy(0,1);
-            //lcd_puts("AA");
-            
             //lcd_gotoxy(0,1);
             //lcd_puts("          ");
             if (wl_status & (1<<RX_DR)) // IRQ: Package has been received
@@ -1518,7 +1514,6 @@ int main (void)
                uint8_t i;
                
                
-               wl_spi_status &= ~(1<<WL_DATA_PENDENT);
                //lcd_puthex(readstatus);
                //lcd_putc(' ');
                //lcd_gotoxy(0,3);
@@ -1611,13 +1606,15 @@ int main (void)
                wl_blockedcounter++;
                if (wl_blockedcounter>10)
                {
+                  lcd_gotoxy(16,3);
+                  lcd_putc('x');
                   wl_spi_status &= ~(1<<WL_DATA_PENDENT);
                   
                   wl_blockedcounter = 0;
                   
                }
                
-               loop_pipenummer=2;
+               loop_pipenummer=1;
                
                wl_module_CE_hi;
                _delay_us(15);
@@ -1990,6 +1987,9 @@ int main (void)
             wl_blockedcounter++;
             if (wl_blockedcounter>10)
             {
+               lcd_gotoxy(16,3);
+               lcd_putc('z');
+
                wl_module_config_register(STATUS, (1<<TX_DS)); //Clear Interrupt Bit
                wl_spi_status &= ~(1<<WL_DATA_PENDENT);
                wl_spi_status &= ~(1<<WL_SEND_REQUEST);
@@ -2004,7 +2004,7 @@ int main (void)
             
             wl_module_send(payload,wl_module_PAYLOAD);
             
-            wl_spi_status |= (1<<WL_DATA_PENDENT);
+            wl_spi_status |= (1<<WL_DATA_PENDENT); // warten auf antwort vom remote
             
             //OSZIA_LO; // 30 ms bis lesen
             
@@ -2014,7 +2014,8 @@ int main (void)
             delay_ms(1);
             
             
-            //lcd_gotoxy(3,3);
+            lcd_gotoxy(3,3);
+            
             //lcd_putc('z');
             // maincounter++;
             //lcd_gotoxy(10,1);
@@ -2281,7 +2282,11 @@ int main (void)
          lcd_puthex(wl_blockedcounter);
          lcd_putc(' ');
          lcd_putc('p');
+         lcd_puthex(pipenummer);
+         lcd_putc(' ');
+         lcd_putc('l');
          lcd_puthex(loop_pipenummer);
+
          if (usbstatus & (1<<WRITEAUTO))
          {
             uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
