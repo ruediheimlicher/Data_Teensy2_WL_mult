@@ -1990,8 +1990,9 @@ int main (void)
             wl_blockedcounter++;
             if (wl_blockedcounter>10)
             {
-               
+               wl_module_config_register(STATUS, (1<<TX_DS)); //Clear Interrupt Bit
                wl_spi_status &= ~(1<<WL_DATA_PENDENT);
+               wl_spi_status &= ~(1<<WL_SEND_REQUEST);
                wl_blockedcounter = 0;
 
             }
@@ -2081,8 +2082,12 @@ int main (void)
                lcd_gotoxy(18,2);
                lcd_puts("rt");
                
+               wl_module_config_register(STATUS, (1<<TX_DS)); //Clear Interrupt Bit
+              wl_spi_status &= ~(1<<WL_DATA_PENDENT);
+               
                
                wl_module_config_register(STATUS, (1<<MAX_RT));	// Clear Interrupt Bit
+               
                wl_module_CE_hi;								// Start transmission
                _delay_us(50);
                wl_module_CE_lo;
