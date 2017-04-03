@@ -284,6 +284,9 @@ volatile uint8_t mmcstatus = 0;
 volatile uint16_t                   writecounter1=0; // Takt fuer write to SD
 volatile uint16_t                   writecounter2=0; // Takt fuer write to SD
 
+volatile uint16_t                   datapendcounter=0; // Takt fuer write to SD
+
+
 //#define CLOCK_DIV 15 // timer0 1 Hz bei Teilung /4 in ISR 16 MHz
 #define CLOCK_DIV 8 // timer0 1 Hz bei Teilung /4 in ISR 8 MHz
 #define BLINK_DIV 4 // timer0 1 Hz bei Teilung /4 in ISR 8 MHz
@@ -789,6 +792,7 @@ ISR(TIMER0_COMPA_vect)
    //   Timer1--;          /* Performance counter for this module */
    mmc_disk_timerproc();	/* Drive timer procedure of low level disk I/O module */
    
+   
    writecounter1++;
    if (writecounter1 >= WRITETAKT) // 1s
    {
@@ -821,6 +825,11 @@ ISR(TIMER0_COMPA_vect)
          mmcstatus |= (1<<WRITENEXT);
          writecounter2 = 0;
       }
+   }
+   
+   if ((wl_spi_status & (1<<WL_DATA_PENDENT)))
+   {
+      datapendcounter++;
    }
    //OSZIA_HI;
 }
@@ -1499,20 +1508,31 @@ int main (void)
                lcd_puts("rx+");
                
                
-               uint8_t rec = wl_module_get_rx_pw(pipenummer); //gets the RX payload width
-               //lcd_gotoxy(0,3);
-               lcd_putc(' ');
-               lcd_puthex(rec);
-               //lcd_putc(' ');
                
                pipenummer = wl_module_get_rx_pipe();
-               lcd_gotoxy(6,2);
+               lcd_gotoxy(4,2);
                lcd_putc('p');
                lcd_puthex(pipenummer);
                
+               uint8_t rec = wl_module_get_rx_pw(pipenummer); //gets the RX payload width
+               //lcd_gotoxy(0,3);
+               if (!(rec==0x10))
+               {
+                  lcd_gotoxy(14,2);
+                  lcd_putc('!');
+                  lcd_puthex(rec);
+               }
+               
+               //lcd_putc(' ');
+
+               
                uint8_t readstatus = wl_module_get_data((void*)&wl_data);
                uint8_t i;
-               
+               delay_ms(10);
+               lcd_gotoxy(8,2);
+               lcd_puts("r");
+               lcd_putint12(datapendcounter);
+               datapendcounter=0;
                
                //lcd_puthex(readstatus);
                //lcd_putc(' ');
@@ -2004,6 +2024,7 @@ int main (void)
             
             wl_module_send(payload,wl_module_PAYLOAD);
             
+            datapendcounter=0;
             wl_spi_status |= (1<<WL_DATA_PENDENT); // warten auf antwort vom remote
             
             //OSZIA_LO; // 30 ms bis lesen
@@ -2011,10 +2032,11 @@ int main (void)
             // **********************************************************
             
             //wl_spi_status |= (1<<WL_DATA_PENDENT);    // busy
-            delay_ms(1);
             
             
-            lcd_gotoxy(3,3);
+            
+            lcd_gotoxy(8,2);
+            lcd_puts("s");
             
             //lcd_putc('z');
             // maincounter++;
@@ -2034,6 +2056,7 @@ int main (void)
             
             wl_status = wl_module_get_status();
             
+            delay_ms(1);
             //lcd_gotoxy(16,1);
             //lcd_puthex(wl_status);
             
@@ -2086,6 +2109,7 @@ int main (void)
                wl_module_config_register(STATUS, (1<<TX_DS)); //Clear Interrupt Bit
               wl_spi_status &= ~(1<<WL_DATA_PENDENT);
                
+               wl_spi_status &= ~(1<<WL_SEND_REQUEST);
                
                wl_module_config_register(STATUS, (1<<MAX_RT));	// Clear Interrupt Bit
                
@@ -2094,7 +2118,14 @@ int main (void)
                wl_module_CE_lo;
                
                wl_module_rx_config();
-               loop_pipenummer=5;
+               if (loop_pipenummer < 3)
+               {
+               loop_pipenummer++;
+               }
+               else
+               {
+                  loop_pipenummer=1;
+               }
 
                
             }
