@@ -11,7 +11,7 @@
 #define OSZIPORTDDR        DDRD
 #define OSZIPORTPIN        PIND
 #define PULSA              4
-//#define PULSB              5
+#define PULSB              5
 //#define OSZI_PULS_B        5
 
 #define TEST_PIN           5
@@ -21,11 +21,11 @@
 #define OSZIA_HI OSZIPORT |= (1<<PULSA)
 #define OSZIA_TOGG OSZIPORT ^= (1<<PULSA)
 
-/*
-#define OSZI_B_LO OSZIPORT &= ~(1<<OSZI_PULS_B)
-#define OSZI_B_HI OSZIPORT |= (1<<OSZI_PULS_B)
-#define OSZI_B_TOGG OSZIPORT ^= (1<<OSZI_PULS_B)
-*/
+
+#define OSZIB_LO OSZIPORT &= ~(1<<PULSB)
+#define OSZIB_HI OSZIPORT |= (1<<PULSB)
+#define OSZIB_TOGG OSZIPORT ^= (1<<PULSB)
+
 
 
 

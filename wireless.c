@@ -72,8 +72,9 @@ void spi_transmit_sync (uint8_t * dataout, uint8_t len)
       SPDR = dataout[i]; while((SPSR & (1<<SPIF))==0);
    }
 }
+
 uint8_t spi_fast_shift (uint8_t data)
-// Clocks only one byte to target device and returns the recei ved one
+// Clocks only one byte to target device and returns the received one
 {
    SPDR = data;
    while((SPSR & (1<<SPIF))==0); return SPDR;

@@ -171,6 +171,7 @@ extern void wl_module_tx_config(uint8_t tx_nr)
     // Set length of incoming payload 
     //wl_module_config_register(RX_PW_P0, wl_module_PAYLOAD);
 	
+   // 0x20: 750us delay, 0x0F: 15 retries
 	wl_module_config_register(SETUP_RETR,(SETUP_RETR_ARD_750 | SETUP_RETR_ARC_15));
 	
 	//set the TX address for the pipe with the same number as the iteration
@@ -496,6 +497,7 @@ void wl_module_write_register(uint8_t reg, uint8_t * value, uint8_t len)
     spi_transmit_sync(value,len);
     wl_module_CSN_hi;
 }
+
 
 
 void wl_module_send(uint8_t * value, uint8_t len) 
