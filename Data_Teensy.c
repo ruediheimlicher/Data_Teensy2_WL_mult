@@ -899,6 +899,8 @@ ISR(INT0_vect) // Interrupt bei CS, falling edge
 {
    OSZIB_LO;
    inindex=0;
+   //wl_status = wl_module_get_status();
+   
    wl_spi_status |= (1<<WL_ISR_RECV);
    wl_isr_counter++;
    OSZIB_HI;
