@@ -248,6 +248,14 @@ volatile uint8_t  eeprom_indata=0;
 //Variablen WL
 // MARK: WL Defs
 volatile uint8_t wl_status=0;
+
+volatile uint8_t wl_recv_status=0;
+
+volatile uint8_t wl_send_status=0;
+
+
+
+
 //volatile uint8_t PTX=0;
 volatile uint8_t int0counter=0;
 volatile uint8_t int1counter=0;
@@ -258,7 +266,7 @@ char itoabuffer[20] = {};
 volatile uint8_t wl_data[wl_module_PAYLOAD] = {};
 //volatile uint8_t wl_data_array[4][wl_module_PAYLOAD] = {};
 
-volatile uint8_t pipenummer = 0; // nur pipes < 7
+volatile uint8_t pipenummer = 1; // nur pipes < 7
 
 volatile uint8_t loop_pipenummer = 1;
 volatile uint8_t loop_rt_pipenummer = 1;
@@ -1460,18 +1468,20 @@ int main (void)
           //lcd_gotoxy(18,1);
          
          wl_status = wl_module_get_status();
-         lcd_putc(' ');
          
-          //lcd_puthex(wl_status);
+         
+         lcd_putc(' ');
+         lcd_gotoxy(10,2);
+          lcd_puthex(wl_status);
          delay_ms(1);
          
          pipenummer = wl_module_get_rx_pipe_from_status(wl_status);
          delay_ms(2);
-         //lcd_gotoxy(16,0);
-         //lcd_puthex(pipenummer);
+         lcd_gotoxy(13,0);
+         lcd_puthex(pipenummer);
          
           wl_spi_status &= ~(1<<WL_ISR_RECV);
-         
+
          if (pipenummer < 7)
          {
             OSZIB_LO;
@@ -1484,6 +1494,8 @@ int main (void)
                int0counter=0;
             }
            
+            lcd_gotoxy(12,2);
+            lcd_puthex(wl_status);
 
 
             //loop_pipenummer = pipenummer;
@@ -1497,7 +1509,7 @@ int main (void)
                lcd_gotoxy(0,1);
                lcd_puts("RX");
 
-               pipenummer = wl_module_get_rx_pipe();
+  //             pipenummer = wl_module_get_rx_pipe();
                
                
                lcd_gotoxy(3,1);
@@ -1575,37 +1587,7 @@ int main (void)
                
                
                
-               //lcd_putc(' ');
-               //lcd_gotoxy(0,3);
-               //            lcd_gotoxy(12,2);
-               //            lcd_putc('p');
-               //           lcd_puthex(wl_data[9]);
-               
-//               lcd_gotoxy(18,2);
-//               lcd_puthex(wl_data[0]);// maincounter von remote module
-               
-               //lcd_putc(' ');
-               //lcd_puthex(wl_data[10]);
-               //  lcd_putc(' ');
-               //  lcd_puthex(wl_data[11]);
-               
-//               sendbuffer[ADC0LO]= wl_data[10];
-//               sendbuffer[ADC0HI]= wl_data[11];
-               
-               //data von LM35
-               //lcd_gotoxy(8,1);
-               //lcd_puthex(wl_data[11]);
-               //lcd_puthex(wl_data[10]);
-               
-               //uint16_t temperatur = (wl_data[11]<<8);
-               //temperatur |= wl_data[10];
-               //lcd_gotoxy(14,1);
-               //lcd_putint12(temperatur);
-               
-               // data von pt
-//               sendbuffer[ADC1LO]= wl_data[12];
-//               sendbuffer[ADC1HI]= wl_data[13];
-               /*
+                 /*
                lcd_gotoxy(0,1);
                lcd_puthex(wl_data[13]);
                lcd_puthex(wl_data[12]);
@@ -2111,7 +2093,7 @@ int main (void)
                lcd_puts("   ");
 
                lcd_gotoxy(14,1);
-               lcd_puts("tx+");
+               lcd_puts(" tx");
                delay_ms(2);
                
                wl_module_config_register(STATUS, (1<<TX_DS)); //Clear Interrupt Bit
