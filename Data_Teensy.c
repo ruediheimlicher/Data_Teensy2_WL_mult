@@ -1073,21 +1073,22 @@ uint8_t writelin(uint16_t wert)
    return s1;
 }
 // pi 3.14159 26535
-payload[0] = 3;
-payload[1] = 0;
-payload[2] = 1;
-payload[3] = 4;
-payload[4] = 1;
-payload[5] = 5;
-payload[6] = 9;
-payload[7] = 2;
-payload[8] = 6;
 
 
 // MARK:  - main
 int main (void)
 {
    uint8_t payload[wl_module_PAYLOAD];
+   payload[0] = 3;
+   payload[1] = 0;
+   payload[2] = 1;
+   payload[3] = 4;
+   payload[4] = 1;
+   payload[5] = 5;
+   payload[6] = 9;
+   payload[7] = 2;
+   payload[8] = 6;
+
    uint16_t tempwert = 444;
    int8_t r;
    
@@ -1451,7 +1452,7 @@ int main (void)
       {
          
          OSZIA_LO;
-         lcd_gotoxy(6,0);
+         lcd_gotoxy(8,0);
          //lcd_puthex(int0counter);
          lcd_puts("is");
          lcd_puthex(wl_isr_counter);
