@@ -2016,7 +2016,7 @@ int main (void)
             wl_blockedcounter = 0;
             
             //wl_module_tx_config(wl_module_TX_NR_2);
-            wl_module_tx_config(wl_module_TX_NR_1);
+            wl_module_tx_config(wl_module_TX_NR_2);
             
             // WL
             uint8_t k;
