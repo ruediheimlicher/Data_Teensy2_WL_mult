@@ -1579,7 +1579,8 @@ int main (void)
                
                
                wl_module_config_register(STATUS, (1<<RX_DR)); //Clear Interrupt Bit
-               
+               //wl_module_get_one_byte(FLUSH_TX);
+
                
                PTX=0;
                
