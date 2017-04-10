@@ -1651,7 +1651,7 @@ int main (void)
             if (wl_status & (1<<TX_DS)) // IRQ: Package has been sent
             {
                //OSZIA_LO;
-               lcd_gotoxy(14,2);
+               lcd_gotoxy(14,1);
                lcd_puts("   ");
 
                lcd_gotoxy(14,1);
@@ -2106,16 +2106,15 @@ int main (void)
             lcd_gotoxy(14,1);
             lcd_puts("   ");
             
-            lcd_gotoxy(14,2);
-            lcd_puts("rt*");
+            lcd_gotoxy(14,1);
+            lcd_puts("*rt");
             
          }
 
             
             wl_module_rx_config();
          
-         
-            
+      
             //lcd_putint1(loop_pipenummer);
             
             //lcd_putc('z');
@@ -2141,6 +2140,7 @@ int main (void)
 
          }
            */
+         
          
             //while(!(wl_module_get_status() & (1<<TX_DS)) || wl_module_get_status() & (1<<MAX_RT));
             /*
