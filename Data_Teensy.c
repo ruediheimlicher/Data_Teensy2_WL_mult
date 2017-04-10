@@ -1542,7 +1542,7 @@ int main (void)
                      lcd_putc('t');
                      lcd_putc('1');
                      lcd_putc(' ');
-                     lcd_putint(temperatur1);
+                     lcd_putint2(temperatur1);
                      
                      sendbuffer[ADC1LO]= wl_data[12];
                      sendbuffer[ADC1HI]= wl_data[13];
@@ -1561,7 +1561,7 @@ int main (void)
                      lcd_putc('t');
                      lcd_putc('2');
                      lcd_putc(' ');
-                     lcd_putint(temperatur1);
+                     lcd_putint2(temperatur1);
                      
                      sendbuffer[ADC1LO]= wl_data[12];
                      sendbuffer[ADC1HI]= wl_data[13];
@@ -1999,11 +1999,11 @@ int main (void)
          {
             
             wl_blockedcounter++;
-            if (wl_blockedcounter>2)
+            //if (wl_blockedcounter>1)
             {
                lcd_gotoxy(18,0);
                lcd_putc('z');
-               
+               wl_module_get_one_byte(FLUSH_TX);
                wl_module_config_register(STATUS, (1<<TX_DS)); //Clear Interrupt Bit
                wl_module_config_register(STATUS, (1<<RX_DR)); //Clear Interrupt Bit
                wl_spi_status &= ~(1<<WL_DATA_PENDENT);
@@ -2016,7 +2016,7 @@ int main (void)
             wl_blockedcounter = 0;
             
             //wl_module_tx_config(wl_module_TX_NR_2);
-            wl_module_tx_config(wl_module_TX_NR_2);
+            wl_module_tx_config(wl_module_TX_NR_1);
             
             // WL
             uint8_t k;
