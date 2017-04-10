@@ -809,7 +809,7 @@ ISR(TIMER0_COMPA_vect)
    
    
    writecounter1++;
-   if (writecounter1 >= WRITETAKT) // 1s
+   if (writecounter1 >= 2*WRITETAKT) // 1s
    {
       
       intervallcounter++;
@@ -1630,7 +1630,7 @@ int main (void)
                wl_module_get_one_byte(FLUSH_TX);
                // pipe vorwaertsschalten
                
-                delay_ms(30);
+                delay_ms(80);
                if (loop_pipenummer < 3)
                {
                   loop_pipenummer++;
@@ -2065,8 +2065,9 @@ int main (void)
          
          wl_blockedcounter = 0;
          
+         
          //wl_module_tx_config(loop_pipenummer);
-         wl_module_tx_config(wl_module_TX_NR_2);
+         wl_module_tx_config(wl_module_TX_NR_1);
          
          // WL
          
