@@ -2294,7 +2294,7 @@ int main (void)
       }// if (hoststatus & (1<<DOWNLOAD_OK))
       
       
-      if (loopcount0==0xEFFF)
+      if (loopcount0==0x8FFF)
       {
          
          loopcount0=0;
