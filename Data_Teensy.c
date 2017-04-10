@@ -1506,6 +1506,9 @@ int main (void)
             if (wl_status & (1<<RX_DR)) // IRQ: Package has been received
             {
                //  OSZIA_LO; // 130ms mit Anzeige
+               lcd_gotoxy(18,1);
+               lcd_puts("  ");
+
                lcd_gotoxy(0,1);
                lcd_puts("RX");
 
@@ -1636,6 +1639,9 @@ int main (void)
             
             if (wl_status & (1<<MAX_RT)) // IRQ: Package has not been sent, send again
             {
+               lcd_gotoxy(0,1);
+               lcd_puts("  ");
+
                lcd_gotoxy(18,1);
                lcd_puts("RT");
                //wl_spi_status &= ~(1<<WL_DATA_PENDENT);    // reset, not busy
@@ -1643,7 +1649,7 @@ int main (void)
                wl_module_config_register(STATUS, (1<<TX_DS)); //Clear Interrupt Bit
                
                wl_module_config_register(STATUS, (1<<MAX_RT)); // Clear Interrupt Bit
-               wl_blockedcounter++;
+               
   //             if (wl_blockedcounter>2)
                {
                   lcd_gotoxy(18,0);
@@ -1981,7 +1987,7 @@ int main (void)
       
       } // end if (hoststatus & (1<<MESSUNG_OK))
       
-      // wl_devices aufrufen, Daten lesen
+      // Messung abgeschlossen, wl_devices aufrufen, Daten lesen
       
       if (wl_spi_status & (1<<WL_SEND_REQUEST))
       {
@@ -1995,6 +2001,7 @@ int main (void)
          //      continue;
          
          // paket start
+         /*
          if ((wl_spi_status & (1<<WL_DATA_PENDENT))) //  netz busy oder remote nicht da
          {
             
@@ -2011,7 +2018,8 @@ int main (void)
                wl_blockedcounter = 0;
             }
          }
-         else
+          */
+//         else
          {
             wl_blockedcounter = 0;
             
