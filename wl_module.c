@@ -37,6 +37,52 @@
 #define TX_POWERUP wl_module_config_register(CONFIG, wl_module_CONFIG | ( (1<<PWR_UP) | (0<<PRIM_RX) ) )
 #define RX_POWERUP wl_module_config_register(CONFIG, wl_module_CONFIG | ( (1<<PWR_UP) | (1<<PRIM_RX) ) )
 
+/*
+//ping the current pipe with one byte of data
+uint8_t Ping(void)
+{
+   unsigned char data = 0xFF; //register to hold byte sent and received
+   unsigned int count; //counter for for loop
+   
+   wl_module_send(&data, 1); //transmit received char over RF
+   
+   //wait until the packet has been sent or the maximum number of retries has been reached
+   uint8_t pingstatus = wl_module_get_status();
+   while(!(wl_module_get_status() & (1<<TX_DS)));
+   
+   wl_module_config_register(STATUS, (1<<TX_DS)); //Clear Interrupt Bit
+  wl_module_rx_config(); //change the device to an RX to get the character back from the other 24L01
+   
+   //wait a while to see if we get the data back (change the loop maximum and the lower if
+   //  argument (should be loop maximum - 1) to lengthen or shorten this time frame
+   for(count = 0; count < 25000; count++)
+   {
+      //check to see if the data has been received.  if so, get the data and exit the loop.
+      //  if the loop is at its last count, assume the packet has been lost and set the data
+      //  to go to the UART to "?".  If neither of these is true, keep looping.
+      if((nrf24l01_irq_pin_active() && nrf24l01_irq_rx_dr_active()))
+      {
+         nrf24l01_read_rx_payload(&data, 1); //get the payload into data
+         break;
+      }
+      
+      //if loop is on its last iteration, assume packet has been lost.
+      if(count == 24999)
+         data = 0;
+   }
+   
+   nrf24l01_irq_clear_all(); //clear interrupts again
+   
+   DelayUS(130); //wait for receiver to come from standby to RX
+   nrf24l01_set_as_tx(); //resume normal operation as a TX
+   
+   //if the packet came back correctly, return true...otherwise, return false
+   if(data == 0xFF)
+      return true;
+   else
+      return false;
+}
+*/
 
 
 // Flag which denotes transmitting mode

@@ -51,7 +51,6 @@ void wl_spi_init()
    
    
    
-   //Stromlaufplan für den Anschluß an einen ATmega8
 }
 
 void spi_transfer_sync (uint8_t * dataout, uint8_t * datain, uint8_t len)
