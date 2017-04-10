@@ -459,6 +459,7 @@ return status;
 
 }
 
+
 extern uint8_t wl_module_get_data(uint8_t * data) 
 // Reads wl_module_PAYLOAD bytes into data array
 {
@@ -497,6 +498,8 @@ void wl_module_write_register(uint8_t reg, uint8_t * value, uint8_t len)
     spi_transmit_sync(value,len);
     wl_module_CSN_hi;
 }
+
+
 
 
 

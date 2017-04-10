@@ -1605,7 +1605,7 @@ int main (void)
                wl_spi_status &= ~(1<<WL_DATA_PENDENT);    // Beim Senden gesetzt. Data angekommen, not busy
                
                PTX=0;
-               
+               wl_module_get_one_byte(FLUSH_TX);
                // pipe vorwaertsschalten
                if (loop_pipenummer < 3)
                {
@@ -2134,7 +2134,9 @@ int main (void)
                
                wl_module_config_register(STATUS, (1<<MAX_RT));	// Clear Interrupt Bit
                
-               
+               wl_module_config_register(STATUS, (1<<RX_DR)); //Clear Interrupt Bit
+
+               wl_module_get_one_byte(FLUSH_TX);
                // next pipe waehlen
                
                wl_module_rx_config();
@@ -2146,6 +2148,7 @@ int main (void)
                else
                {
                   loop_rt_pipenummer=1;
+                  
                }
              }
             else
