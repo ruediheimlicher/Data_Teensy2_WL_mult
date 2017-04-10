@@ -1661,6 +1661,7 @@ int main (void)
                //OSZIA_HI;
             }
             
+            /*
             if (wl_status & (1<<MAX_RT)) // IRQ: Package has not been sent, send again
             {
                lcd_gotoxy(0,1);
@@ -1691,6 +1692,7 @@ int main (void)
        //        lcd_gotoxy(18,1);
        //        lcd_puts("--");
             }
+             */
             OSZIB_HI;
          } // if pipenummer <7
          
@@ -2110,8 +2112,23 @@ int main (void)
             lcd_puts("*rt");
             
          }
-
+         /*
+          // verhinderte data lesen
+         if (wl_status & (1<<TX_DS)) // IRQ: Package has been sent
+         {
+            //OSZIA_LO;
+            lcd_gotoxy(14,1);
+            lcd_puts("   ");
             
+            lcd_gotoxy(14,1);
+            lcd_puts("*tx");
+            wl_module_config_register(STATUS, (1<<TX_DS)); //Clear Interrupt Bit
+            PTX=0;
+            //OSZIA_HI;
+         }
+         */
+
+         
             wl_module_rx_config();
          
       
