@@ -218,7 +218,7 @@ extern void wl_module_tx_config(uint8_t tx_nr)
     //wl_module_config_register(RX_PW_P0, wl_module_PAYLOAD);
 	
    // 0x20: 750us delay, 0x0F: 15 retries
-	wl_module_config_register(SETUP_RETR,(SETUP_RETR_ARD_750 | SETUP_RETR_ARC_15));
+	wl_module_config_register(SETUP_RETR,(SETUP_RETR_ARD_1500 | SETUP_RETR_ARC_15));
 	
 	//set the TX address for the pipe with the same number as the iteration
 			switch(tx_nr)			
@@ -262,12 +262,12 @@ extern void wl_module_tx_config(uint8_t tx_nr)
 	PTX =0;
 	TX_POWERUP;
    wl_module_CE_hi;     // Listening for pakets
-	/*
+	
     // Start receiver 
     PTX = 0;        // Start in receiving mode
     RX_POWERUP;     // Power up in receiving mode
     wl_module_CE_hi;     // Listening for pakets
-	*/
+	
 }
 
 //sets the TX address in the TX_ADDR register
