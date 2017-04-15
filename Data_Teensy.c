@@ -1495,7 +1495,9 @@ int main (void)
          if (pipenummer == 7) // ungueltige pipenummer
          {
             wl_module_get_one_byte(FLUSH_TX);
-            
+            lcd_gotoxy(16,1);
+            lcd_putc('?'); //
+
             // pipe vorwaertsschalten
             if (loop_pipenummer < 3)
             {
@@ -1512,6 +1514,9 @@ int main (void)
          }
          else
          {
+            lcd_gotoxy(16,1);
+            lcd_putc('-'); //
+
             //OSZIB_LO;
             
             //lcd_gotoxy(12,2);
@@ -1714,6 +1719,7 @@ int main (void)
             } // if RT
             else
             {
+               
                //        lcd_gotoxy(18,1);
                //        lcd_puts("--");
             }
@@ -2003,7 +2009,7 @@ int main (void)
          else if (! usb_configured()) //b kein USB
          {
             lcd_gotoxy(8,1);
-            lcd_puts("esc  ");
+            lcd_puts("no USB");
             
             // usbstatus1 &= ~(1<<SAVE_SD_RUN_BIT);   //  Schreiben so oder so beenden
          }
@@ -2161,6 +2167,7 @@ int main (void)
          
          lcd_gotoxy(9,1);
          lcd_puts("s"); // senden markieren, wird in WL_ISR_RECV-Routine mit r ueberschrieben
+         lcd_putint1(loop_pipenummer);
          
          delay_ms(20); // etwas warten, wichtig, sonst wird rt nicht immer erkannt
          wl_status = wl_module_get_status();
