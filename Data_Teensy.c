@@ -1453,7 +1453,6 @@ int main (void)
       //OSZI_B_LO;
       //Blinkanzeige
       loopcount0+=1;
-      
       // ********
       
       if (wl_spi_status & (1<<WL_ISR_RECV)) // in ISR gesetzt, ETWAS LOS AUF WL
@@ -1813,6 +1812,7 @@ int main (void)
       float adcfloat=0;
       if (hoststatus & (1<<MESSUNG_OK)) // Intervall abgelaufen. In ISR gesetzt, Messungen vornehmen
       {
+         
          /*
           // teensy
           //ADC
@@ -2088,6 +2088,7 @@ int main (void)
       
       if (wl_spi_status & (1<<WL_SEND_REQUEST))
       {
+         
          wl_send_status=0;
          lcd_gotoxy(9,1);
          lcd_puts(" "); // senden markieren, wird in WL_ISR_RECV-Routine mit r ueberschrieben
@@ -2157,7 +2158,7 @@ int main (void)
          
          
          
-         OSZIB_LO;
+         //OSZIB_LO;
          delay_ms(30); // etwas warten
          // WL
          
