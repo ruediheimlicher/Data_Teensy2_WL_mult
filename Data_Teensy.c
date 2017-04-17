@@ -1549,7 +1549,7 @@ int main (void)
                //              lcd_gotoxy(18,1);
                //               lcd_puts("  ");
                
-               lcd_gotoxy(0,1);
+               lcd_gotoxy(16,1);
                lcd_puts("RX");
                
                //             pipenummer = wl_module_get_rx_pipe();
@@ -1587,7 +1587,7 @@ int main (void)
                      lcd_putc('t');
                      lcd_putc('1');
                      lcd_putc(' ');
-                     lcd_putint12(temperatur0);
+                     lcd_putint(temperatur0);
                      
                      sendbuffer[ADC1LO]= wl_data[12];
                      sendbuffer[ADC1HI]= wl_data[13];
@@ -1608,7 +1608,7 @@ int main (void)
                      lcd_putc('t');
                      lcd_putc('2');
                      lcd_putc(' ');
-                     lcd_putint12(temperatur0);
+                     lcd_putint(temperatur0);
                      
                      sendbuffer[ADC1LO]= wl_data[12];
                      sendbuffer[ADC1HI]= wl_data[13];
@@ -1657,7 +1657,7 @@ int main (void)
                wl_module_get_one_byte(FLUSH_TX);
                // pipe vorwaertsschalten
                
-               delay_ms(20);
+               delay_ms(50);
                
                if (loop_pipenummer < 3)
                {
@@ -2143,7 +2143,7 @@ int main (void)
          
          
          OSZIB_LO;
-         //delay_ms(30); // etwas warten
+         delay_ms(30); // etwas warten
          // WL
          
          payload[9] = maincounter;
