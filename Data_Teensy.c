@@ -1467,7 +1467,7 @@ int main (void)
           
           */
          //lcd_putc('d');
-         OSZIA_LO;
+         
          lcd_gotoxy(7,0);
          lcd_puts("    ");
          lcd_gotoxy(7,0);
@@ -1497,6 +1497,7 @@ int main (void)
          
          if (pipenummer == 7) // ungueltige pipenummer
          {
+            
             lcd_gotoxy(8,3);
             lcd_putc('*');
             wl_module_get_one_byte(FLUSH_TX);
@@ -1746,7 +1747,7 @@ int main (void)
          
          //OSZIB_HI;
          //         } // if pipenummer <7
-         OSZIA_HI;
+         //OSZIA_HI;
          //    wl_spi_status = 0;
       } // end ISR abarbeiten (wl_spi_status & (1<<WL_ISR_RECV))
       
@@ -1764,6 +1765,7 @@ int main (void)
       //   if ((mmcstatus & (1<<WRITENEXT)) )
       if (mmcstatus & (1<<WRITENEXT) ) //
       {
+         
          //if (usbstatus & (1<<WRITEAUTO))
          if ((usbstatus == WRITE_MMC_TEST)&& (mmcwritecounter < 512)) // Test: SD beschreiben
          {
@@ -1813,6 +1815,7 @@ int main (void)
       float adcfloat=0;
       if (hoststatus & (1<<MESSUNG_OK)) // Intervall abgelaufen. In ISR gesetzt, Messungen vornehmen
       {
+         
          /*
           // teensy
           //ADC
