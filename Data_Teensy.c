@@ -813,7 +813,7 @@ ISR(TIMER0_COMPA_vect)
    {
       
       intervallcounter++;
-      if (intervallcounter >= intervall)
+      if (intervallcounter >= 2*intervall)
       {
          intervallcounter = 0;
          if (hoststatus & (1<<DOWNLOAD_OK))// Download von SD, Messungen unterbrechen
@@ -1458,6 +1458,7 @@ int main (void)
       
       if (wl_spi_status & (1<<WL_ISR_RECV)) // in ISR gesetzt, ETWAS LOS AUF WL
       {
+         pipenummer=0;
          /* reset
           https://devzone.nordicsemi.com/question/5930/is-there-any-way-to-reset-nrf24l01/
           1)use power down mode (PWR_UP = 0)
@@ -1468,11 +1469,12 @@ int main (void)
           */
          //lcd_putc('d');
          //OSZIA_LO;
-         lcd_gotoxy(7,0);
-         lcd_puts("    ");
-         lcd_gotoxy(7,0);
+//         lcd_gotoxy(7,0);
+//         lcd_puts("    ");
+ //        lcd_gotoxy(7,0);
 
          //lcd_puthex(int0counter);
+         lcd_gotoxy(7,0);
          lcd_puts("is");
          lcd_puthex(wl_isr_counter); // in ISR von INT0 gesetzt
          //OSZIA_HI;
@@ -1500,33 +1502,21 @@ int main (void)
          {
             lcd_gotoxy(8,3);
 
-            lcd_putc('*');
+            //lcd_putc('*');
             wl_module_get_one_byte(FLUSH_TX);
+            
             //lcd_gotoxy(16,2);
             lcd_putc('?'); //
 
-            // pipe vorwaertsschalten
-            if (loop_pipenummer < 3)
-            {
-               //               loop_pipenummer++;
-               //lcd_putc('e');
-            }
-            else
-            {
-               //lcd_putc('f');
-  //             wl_spi_status &= ~(1<<WL_DATA_PENDENT);    // Data angekommen, not busy
-               //              loop_pipenummer=1;
-               
-            }
             
          }
-         else
+  //       else
          {
             
             //lcd_putc('g');
             //lcd_gotoxy(16,1);
             //lcd_putc('-'); //
-
+            
             //OSZIB_LO;
             
             //lcd_gotoxy(12,2);
@@ -1546,9 +1536,17 @@ int main (void)
              lcd_gotoxy(14,1);
              lcd_puts("  "); // TX weg
              */
+            
+            if (wl_status & (1<<TX_FULL))
+            {
+               lcd_gotoxy(16,2);
+               lcd_putc('F');
+               wl_module_config_register(STATUS, (1<<TX_FULL)); //Clear Interrupt Bit
+            }
+            
             if (wl_status & (1<<RX_DR)) // IRQ: Package has been received
             {
-               lcd_putc('h');
+               //lcd_putc('h');
                //  OSZIA_LO; // 130ms mit Anzeige
                
                //              lcd_gotoxy(18,1);
@@ -1566,6 +1564,7 @@ int main (void)
                
                // Kontrolle, ob payloadlength ok
                uint8_t rec = wl_module_get_rx_pw(pipenummer); //gets the RX payload width
+               delay_ms(10);
                //lcd_gotoxy(0,3);
                if (!(rec==0x10))
                {
@@ -1576,7 +1575,7 @@ int main (void)
                
                // payload lesen
                uint8_t readstatus = wl_module_get_data((void*)&wl_data); // returns status
-               delay_ms(2);
+               delay_ms(10);
                
                //lcd_putc(' ');
                // task je nach pipenummer
@@ -1653,39 +1652,39 @@ int main (void)
                 */
                
                wl_module_config_register(STATUS, (1<<RX_DR)); //Clear Interrupt Bit
-               
+               //delay_ms(50);
                wl_spi_status &= ~(1<<WL_DATA_PENDENT);    // Beim Senden gesetzt. Data angekommen, not busy
                
                PTX=0;
                
-               
+               wl_module_get_one_byte(FLUSH_RX);
                wl_module_get_one_byte(FLUSH_TX);
                // pipe vorwaertsschalten
                
-               delay_ms(50);
-               
-               if (loop_pipenummer < 3)
+               delay_ms(250);
+               //if (loop_pipenummer == pipenummer)
                {
-                  loop_pipenummer++;
-                  wl_spi_status |= (1<<WL_SEND_REQUEST);
-                  
+                  if (loop_pipenummer < 3)
+                  {
+                     loop_pipenummer++;
+                     wl_spi_status |= (1<<WL_SEND_REQUEST);
+                     
+                  }
+                  else
+                  {
+                     loop_pipenummer=1;
+                  }
                }
-               else
-               {
-                  //wl_spi_status &= ~(1<<WL_SEND_REQUEST); // Auftrag an wl erfuellt
-                  //wl_spi_status &= ~(1<<WL_DATA_PENDENT);    // Data angekommen, not busy
-                  //loop_pipenummer=1;
-                  
-               }
-               
+               //delay_ms(50);
                lcd_gotoxy(9,1);
                lcd_putc('r');
+               delay_ms(50);
                //lcd_putint2(datapendcounter);
                //               lcd_puthex(readstatus);
                //               datapendcounter=0;
             }  // end if RX_DR
             
-            } // if pipenummer <7
+         } // if pipenummer <7
  
          
             if (wl_status & (1<<TX_DS)) // IRQ: Package has been sent
@@ -1700,6 +1699,7 @@ int main (void)
                lcd_gotoxy(14,1);
                lcd_puts("TX");
                PTX=0;
+               wl_module_get_one_byte(FLUSH_TX);
                //OSZIA_HI;
             }
             
@@ -1714,8 +1714,11 @@ int main (void)
                //wl_spi_status &= ~(1<<WL_DATA_PENDENT);    // reset, not busy
                
                wl_module_config_register(STATUS, (1<<TX_DS)); //Clear Interrupt Bit
-               
+               //delay_ms(50);
                wl_module_config_register(STATUS, (1<<MAX_RT)); // Clear Interrupt Bit
+               
+               delay_ms(50);
+               //wl_module_get_one_byte(FLUSH_TX);
                
                if (loop_pipenummer < 3)
                {
@@ -2134,6 +2137,7 @@ int main (void)
          wl_blockedcounter = 0;
          
          wl_module_get_one_byte(FLUSH_TX);
+         delay_ms(10);
          wl_module_get_one_byte(FLUSH_RX);
          
          
@@ -2157,9 +2161,9 @@ int main (void)
          
          
          OSZIB_LO;
-         delay_ms(30); // etwas warten
+         delay_ms(20); // etwas warten
          // WL
-         
+         payload[8] = loop_pipenummer;
          payload[9] = maincounter;
          //       payload[10] = sendbuffer[ADC0LO];
          //       payload[11] = sendbuffer[ADC0HI];
@@ -2201,9 +2205,17 @@ int main (void)
          delay_ms(20);
          //lcd_putc('a');
          wl_send_status |= (1<<7);
+         
+         if (wl_status & (1<<TX_FULL))
+         {
+            lcd_gotoxy(16,2);
+            lcd_putc('F');
+            wl_module_config_register(STATUS, (1<<TX_FULL)); //Clear Interrupt Bit
+         }
+
          if (wl_status & (1<<MAX_RT))
          {
-            lcd_putc('b');
+            
             wl_module_config_register(STATUS, (1<<MAX_RT));	// Clear Interrupt Bits
             //           lcd_gotoxy(14,1);
             //           lcd_puts("   ");
@@ -2211,10 +2223,10 @@ int main (void)
             //wl_module_config_register(STATUS, (1<<RX_DR)); //Clear Interrupt Bit
             //           wl_module_get_one_byte(FLUSH_TX);
             
-            lcd_gotoxy(14,1);
+            lcd_gotoxy(14,3);
             lcd_puts("rt");
-            
-            delay_ms(10);
+            //lcd_putc('b');
+            delay_ms(40);
             
             
             if (loop_pipenummer < 3)
@@ -2230,27 +2242,34 @@ int main (void)
             }
             
             
-         }
+         } // if MAX_RT
          
-         /*
+/*
           // verhinderte data lesen
           if (wl_status & (1<<TX_DS)) // IRQ: Package has been sent
           {
           //OSZIA_LO;
-          lcd_gotoxy(14,1);
-          lcd_puts("   ");
           
-          lcd_gotoxy(14,1);
-          lcd_puts("*tx");
+          lcd_gotoxy(14,2);
+          lcd_puts("tx");
           wl_module_config_register(STATUS, (1<<TX_DS)); //Clear Interrupt Bit
           PTX=0;
           //OSZIA_HI;
           }
-          */
+  */
          
-         //lcd_putc('z');
+        // lcd_putc('z');
+ //        wl_module_config_register(STATUS, (1<<TX_DS)); //Clear Interrupt Bit
+         //wl_module_get_one_byte(FLUSH_TX);
+         //wl_status = wl_module_get_status();
+         //delay_ms(10);
+         //lcd_putc('*');
+        //// lcd_puthex(wl_status);
+         
          wl_send_status |= (1<<6);
+         
          wl_module_rx_config();
+         
          delay_ms(10);
 
          
