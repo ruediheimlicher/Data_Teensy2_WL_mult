@@ -268,10 +268,14 @@ volatile uint8_t wl_data[wl_module_PAYLOAD] = {};
 
 volatile uint8_t pipenummer = 1; // nur pipes < 7
 
-volatile uint8_t loop_pipenummer = 2;
-volatile uint8_t loop_rt_pipenummer = 1;
+volatile uint8_t loop_pipenummer = 1;
+volatile uint8_t loop_channelnummer = 0;
 
 volatile uint8_t akt_pipenummer = 1;
+
+volatile uint8_t module_channel[4] = {wl_module_Temp_channel,wl_module_ADC_channel,wl_module_Temp_channel,wl_module_ADC_channel};
+
+
 
 volatile uint8_t wl_blockedcounter=0;
 volatile uint8_t wl_sendcounter=0;
@@ -1513,9 +1517,10 @@ int main (void)
 
             
          }
-  //       else
+         else
          {
-            
+            lcd_gotoxy(8,3);
+            lcd_putc('-');
             //lcd_putc('g');
             //lcd_gotoxy(16,1);
             //lcd_putc('-'); //
@@ -1582,12 +1587,12 @@ int main (void)
                
                //lcd_putc(' ');
                // task je nach pipenummer
-               switch(pipenummer)
+               switch(loop_channelnummer)
                {
-                  case 1:
+                  case 0:
                   {
-                     temperatur1 = (wl_data[13]<<8);
-                     temperatur1 |= wl_data[12];
+                     temperatur0 = (wl_data[13]<<8);
+                     temperatur0 |= wl_data[12];
                      //temperatur0 = temperatur1;
                      /*
                      lcd_gotoxy(0,2);
@@ -1606,10 +1611,10 @@ int main (void)
                      lcd_puthex(wl_data[0]);// maincounter von remote module
                      */
                   }break;
-                  case 2:
+                  case 1:
                   {
-                     temperatur0 = (wl_data[13]<<8);
-                     temperatur0 |= wl_data[12];
+                     temperatur1 = (wl_data[13]<<8);
+                     temperatur1 |= wl_data[12];
                      //temperatur0 = temperatur1;
                      /*
                      lcd_gotoxy(0,3);
@@ -1657,7 +1662,7 @@ int main (void)
                 */
                
                wl_module_config_register(STATUS, (1<<RX_DR)); //Clear Interrupt Bit
-               delay_ms(20);
+               //delay_ms(20);
                wl_spi_status &= ~(1<<WL_DATA_PENDENT);    // Beim Senden gesetzt. Data angekommen, not busy
                
                PTX=0;
@@ -1667,19 +1672,20 @@ int main (void)
                wl_module_get_one_byte(FLUSH_TX);
                // pipe vorwaertsschalten
                
-               delay_ms(350);
+               delay_ms(150);
                //if (loop_pipenummer == pipenummer)
                {
-                  if (loop_pipenummer < 3)
+                  if (loop_channelnummer < 3)
                   {
-                     loop_pipenummer++;
+                     loop_channelnummer++;
                      wl_spi_status |= (1<<WL_SEND_REQUEST);
                      
                   }
                   else
                   {
-                     loop_pipenummer=1;
+                     //loop_channelnummer=0;
                   }
+                  
                }
                //delay_ms(50);
                lcd_gotoxy(9,1);
@@ -1726,9 +1732,9 @@ int main (void)
                delay_ms(50);
                //wl_module_get_one_byte(FLUSH_TX);
                
-               if (loop_pipenummer < 3)
+               if (loop_channelnummer < 3)
                {
-                  loop_pipenummer++;
+                  loop_channelnummer++;
                   wl_spi_status |= (1<<WL_SEND_REQUEST);
                   
                }
@@ -2070,22 +2076,12 @@ int main (void)
          //lcd_clr_line(3);
          wl_spi_status |= (1<<WL_SEND_REQUEST); // Auftrag an wl, Daten lesen
          loop_pipenummer = 1;
+         loop_channelnummer=0;
          temperatur0=0;
          // Messreihe auf wl starten
          //loop_pipenummer=1;
          
-         if (akt_pipenummer < 3)
-         {
-            akt_pipenummer++;
-            
-         }
-         else
-         {
-            //wl_spi_status &= ~(1<<WL_SEND_REQUEST); // Auftrag an wl erfuellt
-            akt_pipenummer=1;
-            
-         }
-         
+
       } // end if (hoststatus & (1<<MESSUNG_OK))
       
       
@@ -2099,6 +2095,9 @@ int main (void)
          wl_send_status=0;
          lcd_gotoxy(9,1);
          lcd_puts(" "); // senden markieren, wird in WL_ISR_RECV-Routine mit r ueberschrieben
+         
+         lcd_gotoxy(14,3);
+         lcd_puts("   ");
          
          // WL write start
          
@@ -2135,7 +2134,7 @@ int main (void)
          
          lcd_gotoxy(0,1);
          lcd_putc('l');
-         lcd_putint1(loop_pipenummer);
+         lcd_putint1(loop_channelnummer);
          //         lcd_gotoxy(6,2);
          //        lcd_putc('l');
          //         lcd_putint1(akt_pipenummer);
@@ -2161,7 +2160,8 @@ int main (void)
  //        else
          {
             
-            wl_module_tx_config(loop_pipenummer);
+            wl_module_tx_config_channel(loop_pipenummer,module_channel[loop_channelnummer]);
+         
          }
          
          
@@ -2169,18 +2169,21 @@ int main (void)
          OSZIB_LO;
          delay_ms(20); // etwas warten
          // WL
-         payload[8] = loop_pipenummer;
+         payload[8] = loop_channelnummer;
          payload[9] = maincounter;
          //       payload[10] = sendbuffer[ADC0LO];
          //       payload[11] = sendbuffer[ADC0HI];
          payload[10] = adcwert & 0x00FF;
          payload[11] = (adcwert & 0xFF00)>>8;
          
+         lcd_gotoxy(9,1);
+         lcd_putc('s');
+
          
          // ***** SENDEN *****************************************************
          
          wl_module_send(payload,wl_module_PAYLOAD);
-         delay_ms(10);
+         delay_ms(20);
          wl_sendcounter++;
          
          datapendcounter=0;
@@ -2198,12 +2201,18 @@ int main (void)
  //        lcd_gotoxy(18,0);
  //        lcd_putc(' ');
          
- 
-         lcd_gotoxy(9,1);
+         
+         /*
+
          lcd_putc('s'); // senden markieren, wird in WL_ISR_RECV-Routine mit r ueberschrieben
-         lcd_putint1(loop_pipenummer);
+         lcd_putint1(loop_channelnummer);
+         lcd_gotoxy(12,2);
+         lcd_putc('c'); // senden markieren, wird in WL_ISR_RECV-Routine mit r ueberschrieben
+         lcd_puthex(module_channel[loop_channelnummer]);
+*/
          //wl_module_config_register(STATUS, (1<<TX_DS)); // ohne wirkung
          delay_ms(10); // etwas warten, wichtig, sonst wird rt nicht immer erkannt
+         lcd_gotoxy(11,1);
          wl_status = wl_module_get_status();
          //lcd_gotoxy(16,2);
          lcd_puthex(wl_status);
@@ -2231,19 +2240,21 @@ int main (void)
             
             lcd_gotoxy(14,3);
             lcd_puts("rt");
+            lcd_putint1(loop_channelnummer);
             //lcd_putc('b');
-            delay_ms(40);
+            wl_module_get_one_byte(FLUSH_TX);
+            delay_ms(140);
             
             
-            if (loop_pipenummer < 3)
+            if (loop_channelnummer < 3)
             {
-               loop_pipenummer++;
+               loop_channelnummer++;
                wl_spi_status |= (1<<WL_SEND_REQUEST);
                
             }
             else
             {
-               //loop_pipenummer=1;
+               //loop_channelnummer=1;
                //wl_spi_status |= (1<<WL_SEND_REQUEST);
             }
             
@@ -2274,8 +2285,8 @@ int main (void)
          
          wl_send_status |= (1<<6);
          
-         wl_module_rx_config();
-         
+         //(wl_module_rx_config();
+          wl_module_rx_config_channel(module_channel[loop_channelnummer]);
          delay_ms(10);
 
          
@@ -2309,16 +2320,16 @@ int main (void)
          
          lcd_gotoxy(0,2);
          lcd_putc('t');
-         lcd_putc('1');
+         lcd_putc('0');
          lcd_putc(' ');
-         lcd_putint(temperatur1);
+         lcd_putint(temperatur0);
 
          
          lcd_gotoxy(0,3);
          lcd_putc('t');
-         lcd_putc('2');
+         lcd_putc('1');
          lcd_putc(' ');
-         lcd_putint(temperatur0);
+         lcd_putint(temperatur1);
 
          
          if (usbstatus & (1<<WRITEAUTO))
