@@ -1497,7 +1497,7 @@ int main (void)
          delay_ms(10);
          
          pipenummer = wl_module_get_rx_pipe_from_status(wl_status);
-         delay_ms(10);
+         delay_ms(3);
          lcd_gotoxy(8,2);
          lcd_putc('p');
          lcd_puthex(pipenummer);
@@ -1511,7 +1511,7 @@ int main (void)
 
             //lcd_putc('*');
             wl_module_get_one_byte(FLUSH_TX);
-            delay_ms(10);
+            delay_ms(3);
             //lcd_gotoxy(16,2);
             lcd_putc('?'); //
 
@@ -1572,7 +1572,7 @@ int main (void)
                
                // Kontrolle, ob payloadlength ok
                uint8_t rec = wl_module_get_rx_pw(pipenummer); //gets the RX payload width
-               delay_ms(10);
+               delay_ms(3);
                //lcd_gotoxy(0,3);
                if (!(rec==0x10))
                {
@@ -1583,7 +1583,7 @@ int main (void)
                
                // payload lesen
                uint8_t readstatus = wl_module_get_data((void*)&wl_data); // returns status
-               delay_ms(10);
+               delay_ms(3);
                
                //lcd_putc(' ');
                // task je nach pipenummer
@@ -1601,10 +1601,10 @@ int main (void)
                      lcd_putc(' ');
                      lcd_putint(temperatur1);
                       */
-                     /*
-                     sendbuffer[ADC1LO]= wl_data[12];
-                     sendbuffer[ADC1HI]= wl_data[13];
                      
+                     sendbuffer[EXTADC12_0_LO]= wl_data[12];
+                     sendbuffer[EXTADC12_0_HI]= wl_data[13];
+                     /*
                      sendbuffer[ADC0LO]= wl_data[10];
                      sendbuffer[ADC0HI]= wl_data[11];
                      lcd_gotoxy(18,2);
@@ -1623,10 +1623,10 @@ int main (void)
                      lcd_putc(' ');
                      lcd_putint(temperatur0);
                       */
-                     /*
-                     sendbuffer[ADC1LO]= wl_data[12];
-                     sendbuffer[ADC1HI]= wl_data[13];
                      
+                     sendbuffer[EXTADC12_1_LO]= wl_data[12];
+                     sendbuffer[EXTADC12_1_HI]= wl_data[13];
+                     /*
                      sendbuffer[ADC0LO]= wl_data[10];
                      sendbuffer[ADC0HI]= wl_data[11];
                      lcd_gotoxy(18,3);
@@ -1672,7 +1672,7 @@ int main (void)
                wl_module_get_one_byte(FLUSH_TX);
                // pipe vorwaertsschalten
                
-               delay_ms(150);
+               delay_ms(5);
                //if (loop_pipenummer == pipenummer)
                {
                   if (loop_channelnummer < 3)
@@ -1690,7 +1690,7 @@ int main (void)
                //delay_ms(50);
                lcd_gotoxy(9,1);
                lcd_putc('r');
-               delay_ms(10);
+               //delay_ms(10);
                //lcd_putint2(datapendcounter);
                //               lcd_puthex(readstatus);
                //               datapendcounter=0;
@@ -2243,7 +2243,7 @@ int main (void)
             lcd_putint1(loop_channelnummer);
             //lcd_putc('b');
             wl_module_get_one_byte(FLUSH_TX);
-            delay_ms(140);
+            delay_ms(40);
             
             
             if (loop_channelnummer < 3)
