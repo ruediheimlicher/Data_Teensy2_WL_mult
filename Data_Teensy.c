@@ -816,7 +816,7 @@ ISR(TIMER0_COMPA_vect)
    
    
    writecounter1++;
-   if (writecounter1 >= 2*WRITETAKT) // 1s
+   if (writecounter1 >= WRITETAKT) // 1s
    {
       
       intervallcounter++;
@@ -1498,7 +1498,7 @@ int main (void)
          
          pipenummer = wl_module_get_rx_pipe_from_status(wl_status);
          delay_ms(3);
-         lcd_gotoxy(8,2);
+         lcd_gotoxy(12,2);
          lcd_putc('p');
          lcd_puthex(pipenummer);
          
@@ -1507,7 +1507,7 @@ int main (void)
          
          if (pipenummer == 7) // ungueltige pipenummer
          {
-            lcd_gotoxy(8,3);
+            lcd_gotoxy(12,3);
 
             //lcd_putc('*');
             wl_module_get_one_byte(FLUSH_TX);
@@ -1519,7 +1519,7 @@ int main (void)
          }
          else
          {
-            lcd_gotoxy(8,3);
+            lcd_gotoxy(12,3);
             lcd_putc('-');
             //lcd_putc('g');
             //lcd_gotoxy(16,1);
@@ -1594,14 +1594,17 @@ int main (void)
                      temperatur0 = (wl_data[13]<<8);
                      temperatur0 |= wl_data[12];
                      //temperatur0 = temperatur1;
+                     
                      /*
                      lcd_gotoxy(0,2);
                      lcd_putc('t');
-                     lcd_putc('1');
+                     lcd_putc('0');
                      lcd_putc(' ');
-                     lcd_putint(temperatur1);
-                      */
-                     
+                     lcd_putint(temperatur0);
+                     lcd_putc(' ');
+                     lcd_puthex(wl_data[12]);
+                     lcd_puthex(wl_data[13]);
+                       */
                      sendbuffer[EXTADC12_0_LO]= wl_data[12];
                      sendbuffer[EXTADC12_0_HI]= wl_data[13];
                      /*
@@ -1623,6 +1626,7 @@ int main (void)
                      lcd_putc(' ');
                      lcd_putint(temperatur0);
                       */
+                     
                      
                      sendbuffer[EXTADC12_1_LO]= wl_data[12];
                      sendbuffer[EXTADC12_1_HI]= wl_data[13];
@@ -2142,12 +2146,12 @@ int main (void)
          wl_blockedcounter = 0;
          
          wl_module_get_one_byte(FLUSH_TX);
-         delay_ms(10);
+         delay_ms(3);
          wl_module_get_one_byte(FLUSH_RX);
          
          
          
-         delay_ms(10);
+         delay_ms(3);
          //wl_module_tx_config(2);
          
          // ***** PIPE *********************************************
@@ -2303,7 +2307,7 @@ int main (void)
       }// if (hoststatus & (1<<DOWNLOAD_OK))
       
       
-      if (loopcount0==0x8FFF)
+      if (loopcount0==0x2FFF)
       {
          
          loopcount0=0;
@@ -2323,8 +2327,12 @@ int main (void)
          lcd_putc('0');
          lcd_putc(' ');
          lcd_putint(temperatur0);
-
+         lcd_putc(' ');
+ //        lcd_puthex(wl_data[12]);
+  //       lcd_puthex(wl_data[13]);
          
+
+
          lcd_gotoxy(0,3);
          lcd_putc('t');
          lcd_putc('1');
