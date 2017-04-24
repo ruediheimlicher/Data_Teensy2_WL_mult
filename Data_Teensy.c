@@ -1482,7 +1482,8 @@ int main (void)
 
          //lcd_puthex(int0counter);
          lcd_gotoxy(7,0);
-         lcd_puts("is");
+         lcd_putc('i');
+//         lcd_puts("is");
          lcd_puthex(wl_isr_counter); // in ISR von INT0 gesetzt
          //OSZIA_HI;
          //lcd_gotoxy(18,1);
@@ -1494,33 +1495,33 @@ int main (void)
           lcd_gotoxy(10,2);
           lcd_puthex(wl_status);
           */
-         delay_ms(10);
+         delay_ms(3);
          
          pipenummer = wl_module_get_rx_pipe_from_status(wl_status);
          delay_ms(3);
-         lcd_gotoxy(12,2);
-         lcd_putc('p');
-         lcd_puthex(pipenummer);
+//         lcd_gotoxy(12,2);
+ //        lcd_putc('p');
+//         lcd_puthex(pipenummer);
          
          wl_spi_status &= ~(1<<WL_ISR_RECV);
          
          
          if (pipenummer == 7) // ungueltige pipenummer
          {
-            lcd_gotoxy(12,3);
+//            lcd_gotoxy(12,3);
 
             //lcd_putc('*');
             wl_module_get_one_byte(FLUSH_TX);
             delay_ms(3);
             //lcd_gotoxy(16,2);
-            lcd_putc('?'); //
+//            lcd_putc('?'); //
 
             
          }
          else
          {
-            lcd_gotoxy(12,3);
-            lcd_putc('-');
+//            lcd_gotoxy(12,3);
+//            lcd_putc('-');
             //lcd_putc('g');
             //lcd_gotoxy(16,1);
             //lcd_putc('-'); //
@@ -1560,8 +1561,8 @@ int main (void)
                //              lcd_gotoxy(18,1);
                //               lcd_puts("  ");
                
-               lcd_gotoxy(16,1);
-               lcd_puts("RX");
+//               lcd_gotoxy(16,1);
+//               lcd_puts("RX");
                
                //             pipenummer = wl_module_get_rx_pipe();
                
@@ -1712,8 +1713,8 @@ int main (void)
                //               lcd_gotoxy(14,1);
                //               lcd_puts("   ");
                
-               lcd_gotoxy(14,1);
-               lcd_puts("TX");
+//               lcd_gotoxy(14,1);
+//               lcd_puts("TX");
                PTX=0;
                wl_module_get_one_byte(FLUSH_TX);
                //OSZIA_HI;
@@ -2247,7 +2248,7 @@ int main (void)
             lcd_putint1(loop_channelnummer);
             //lcd_putc('b');
             wl_module_get_one_byte(FLUSH_TX);
-            delay_ms(40);
+            delay_ms(20);
             
             
             if (loop_channelnummer < 3)
@@ -2306,7 +2307,7 @@ int main (void)
          
       }// if (hoststatus & (1<<DOWNLOAD_OK))
       
-      
+#pragma mark LED_LOOP
       if (loopcount0==0x2FFF)
       {
          
