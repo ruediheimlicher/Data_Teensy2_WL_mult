@@ -1499,7 +1499,7 @@ int main (void)
  //        delay_ms(3);
          
          pipenummer = wl_module_get_rx_pipe_from_status(wl_status);
-         delay_ms(3);
+         delay_ms(1);
 //         lcd_gotoxy(12,2);
  //        lcd_putc('p');
 //         lcd_puthex(pipenummer);
@@ -1513,7 +1513,7 @@ int main (void)
 
             //lcd_putc('*');
             wl_module_get_one_byte(FLUSH_TX);
-            delay_ms(3);
+            delay_ms(1);
             //lcd_gotoxy(16,2);
 //            lcd_putc('?'); //
 
@@ -1574,7 +1574,7 @@ int main (void)
                
                // Kontrolle, ob payloadlength ok
                uint8_t rec = wl_module_get_rx_pw(pipenummer); //gets the RX payload width
-               delay_ms(3);
+               delay_ms(1);
                //lcd_gotoxy(0,3);
                if (!(rec==0x10))
                {
@@ -1585,7 +1585,7 @@ int main (void)
                
                // payload lesen
                uint8_t readstatus = wl_module_get_data((void*)&wl_data); // returns status
-               delay_ms(3);
+               delay_ms(1);
                
                //lcd_putc(' ');
                // task je nach pipenummer
