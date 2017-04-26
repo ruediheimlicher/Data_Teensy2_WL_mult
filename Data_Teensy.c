@@ -1696,9 +1696,6 @@ int main (void)
                lcd_gotoxy(9,1);
                lcd_putc('r');
                //delay_ms(10);
-               //lcd_putint2(datapendcounter);
-               //               lcd_puthex(readstatus);
-               //               datapendcounter=0;
             }  // end if RX_DR
             
          } // if pipenummer <7
@@ -1709,9 +1706,8 @@ int main (void)
                wl_module_config_register(STATUS, (1<<TX_DS)); //Clear Interrupt Bit
                
                maincounter++;
-               //OSZIA_LO;
-               //               lcd_gotoxy(14,1);
-               //               lcd_puts("   ");
+//               lcd_gotoxy(14,1);
+//               lcd_puts("   ");
                
 //               lcd_gotoxy(14,1);
 //               lcd_puts("TX");
