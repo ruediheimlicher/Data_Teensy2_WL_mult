@@ -1457,7 +1457,7 @@ int main (void)
    sei();
    while (1)
    {
-      //OSZI_B_LO;
+      
       //Blinkanzeige
       loopcount0+=1;
       
@@ -1465,6 +1465,7 @@ int main (void)
       
       if (wl_spi_status & (1<<WL_ISR_RECV)) // in ISR gesetzt, ETWAS LOS AUF WL
       {
+         OSZIB_LO;
          pipenummer=0;
          /* reset
           https://devzone.nordicsemi.com/question/5930/is-there-any-way-to-reset-nrf24l01/
@@ -1481,10 +1482,10 @@ int main (void)
  //        lcd_gotoxy(7,0);
 
          //lcd_puthex(int0counter);
-         lcd_gotoxy(7,0);
-         lcd_putc('i');
+         //lcd_gotoxy(7,0);
+         //lcd_putc('i');
 //         lcd_puts("is");
-         lcd_puthex(wl_isr_counter); // in ISR von INT0 gesetzt
+         //lcd_puthex(wl_isr_counter); // in ISR von INT0 gesetzt
          //OSZIA_HI;
          //lcd_gotoxy(18,1);
          
@@ -1495,7 +1496,7 @@ int main (void)
           lcd_gotoxy(10,2);
           lcd_puthex(wl_status);
           */
-         delay_ms(3);
+ //        delay_ms(3);
          
          pipenummer = wl_module_get_rx_pipe_from_status(wl_status);
          delay_ms(3);
@@ -1556,7 +1557,7 @@ int main (void)
             if (wl_status & (1<<RX_DR)) // IRQ: Package has been received
             {
                //lcd_putc('h');
-               //  OSZIA_LO; // 130ms mit Anzeige
+                 OSZIA_LO; // 130ms mit Anzeige
                
                //              lcd_gotoxy(18,1);
                //               lcd_puts("  ");
@@ -1567,9 +1568,9 @@ int main (void)
                //             pipenummer = wl_module_get_rx_pipe();
                
                
-               lcd_gotoxy(3,1);
-               lcd_putc('p');
-               lcd_putint1(pipenummer);
+//               lcd_gotoxy(3,1);
+//               lcd_putc('p');
+//               lcd_putint1(pipenummer);
                
                // Kontrolle, ob payloadlength ok
                uint8_t rec = wl_module_get_rx_pw(pipenummer); //gets the RX payload width
@@ -1696,6 +1697,7 @@ int main (void)
                lcd_gotoxy(9,1);
                lcd_putc('r');
                //delay_ms(10);
+               OSZIA_HI;
             }  // end if RX_DR
             
          } // if pipenummer <7
@@ -1763,7 +1765,7 @@ int main (void)
             
             //OSZIB_HI;
 //         } // if pipenummer <7
-         OSZIA_HI;
+         OSZIB_HI;
          //    wl_spi_status = 0;
       } // end ISR abarbeiten (wl_spi_status & (1<<WL_ISR_RECV))
       
@@ -2336,6 +2338,15 @@ int main (void)
          lcd_putc(' ');
          lcd_putint(temperatur1);
 
+         lcd_gotoxy(7,0);
+         lcd_putc('i');
+         //         lcd_puts("is");
+         lcd_puthex(wl_isr_counter); // in ISR von INT0 gesetzt
+
+         lcd_gotoxy(3,1);
+         lcd_putc('p');
+         lcd_putint1(pipenummer);
+
          
          if (usbstatus & (1<<WRITEAUTO))
          {
@@ -2442,7 +2453,7 @@ int main (void)
          //OSZI_C_HI;
          //OSZI_A_HI;
          
-         // OSZI_B_HI;
+         
       } // if loopcount0
       
       /**	ADC	***********************/
