@@ -38,6 +38,7 @@
 #define wl_module_CH          100
 #define wl_module_Temp_channel          100
 #define wl_module_ADC_channel          80
+#define wl_module_ADC12BIT_channel      60
 
 
 

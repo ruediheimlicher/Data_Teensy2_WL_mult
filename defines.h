@@ -1,20 +1,19 @@
-#define CPU_16MHz       0x00
-#define CPU_8MHz        0x01
+#define CPU_16MHz                   0x00
+#define CPU_8MHz                    0x01
 
-#define OHNE_INTERFACE 0
+#define OHNE_INTERFACE              0
 
-#define USB_PACKETSIZE 64
+#define USB_PACKETSIZE              64
 
-#define TEST 0
+#define TEST                        0
 //Oszi
-#define OSZIPORT           PORTD
-#define OSZIPORTDDR        DDRD
-#define OSZIPORTPIN        PIND
-#define PULSA              4
-#define PULSB              5
-//#define OSZI_PULS_B        5
+#define OSZIPORT                    PORTD
+#define OSZIPORTDDR                 DDRD
+#define OSZIPORTPIN                 PIND
+#define PULSA                       4
+#define PULSB                       5
 
-#define TEST_PIN           5
+#define TEST_PIN                    5
 
 
 #define OSZIA_LO OSZIPORT &= ~(1<<PULSA)
@@ -29,9 +28,9 @@
 
 
 
-#define LOOPLEDDDR          DDRD    
-#define LOOPLEDPORT         PORTD   
-#define LOOPLED             6       // fix verdrahtet
+#define LOOPLEDDDR                  DDRD
+#define LOOPLEDPORT                 PORTD
+#define LOOPLED                     6       // fix verdrahtet
 
 #if(MCU ==atmega32u4)//        # Teensy 2.0
 #define SPI_PORT           PORTB

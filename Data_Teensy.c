@@ -283,6 +283,10 @@ volatile uint8_t wl_sendcounter=0;
 volatile uint16_t temperatur0=0;
 volatile uint16_t temperatur1=0;
 
+volatile uint16_t spannung0=0;
+
+volatile uint8_t batteriespannung=0;
+
 
 #pragma mark mmc def
 FATFS Fat_Fs;		/* FatFs work area needed for each volume */
@@ -1638,6 +1642,18 @@ int main (void)
                      lcd_gotoxy(18,3);
                      lcd_puthex(wl_data[0]);// maincounter von remote module
                      */
+                     // Batteriersp
+                     spannung0 = (wl_data[11]<<8);
+                     spannung0 |= wl_data[10];
+                     
+                     sendbuffer[EXTADC12_2_LO]= wl_data[10];
+                     sendbuffer[EXTADC12_2_HI]= wl_data[11];
+                     
+                     //batteriespannung = (wl_data[8]<<8);
+                     batteriespannung = wl_data[7];
+                   
+                     sendbuffer[EXTADC1LO] = wl_data[7];
+                     //sendbuffer[EXTADC1HI] = wl_data[8];
                      
                   }break;
                   case 3:
@@ -2336,7 +2352,26 @@ int main (void)
          lcd_putc('t');
          lcd_putc('1');
          lcd_putc(' ');
-         lcd_putint(temperatur1);
+         lcd_putint12(temperatur1);
+
+         
+         lcd_gotoxy(8,3);
+         lcd_putc('v');
+        // lcd_putc('1');
+         //lcd_putc(' ');
+         lcd_putint12(spannung0);
+         
+         lcd_gotoxy(8,2);
+         lcd_putc('b');
+         // lcd_putc('1');
+         //lcd_putc(' ');
+         lcd_putint(batteriespannung);
+        /*
+         uint32_t spannung= spannung0 * 25.9/1023;
+         lcd_putc(' ');
+         spannung0 = spannung & 0xFFFF;
+         lcd_putint12(spannung0);
+         */
 
          lcd_gotoxy(7,0);
          lcd_putc('i');
@@ -2347,6 +2382,8 @@ int main (void)
          lcd_putc('p');
          lcd_putint1(pipenummer);
 
+         
+         
          
          if (usbstatus & (1<<WRITEAUTO))
          {
@@ -2789,6 +2826,14 @@ int main (void)
                
                mmcwritecounter = 0;
                saveSDposition = 0; // Start der Messung immer am Anfang des Blocks
+               
+               // intervall
+               intervall = recvbuffer[TAKT_LO_BYTE] | (recvbuffer[TAKT_HI_BYTE]<<8);
+               lcd_gotoxy(14,2);
+               lcd_putc('i');
+               lcd_putc(':');
+               lcd_putint(intervall);
+
                
                abschnittnummer = recvbuffer[ABSCHNITT_BYTE]; // Abschnitt,
                

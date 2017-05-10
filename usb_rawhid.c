@@ -282,7 +282,7 @@ uint8_t usb_configured(void)
 	return usb_configuration;
 }
 
-void usb_shutdown(void)
+void usb_shutdown(void) // https://forum.pjrc.com/archive/index.php/t-24987.html
 {
    UDIEN = 0;      // disable interrupts
    UDCON = 1;      // disconnect attach resistor
