@@ -40,22 +40,34 @@
 #define SPI_CLK            PB1
 #define SPI_SS             PB0
 
-#define INTERRUPT_PORT   PORTD
-#define INTERRUPT_DDR   DDRD
+#define INTERRUPT_PORT     PORTD
+#define INTERRUPT_DDR      DDRD
 
-#define INT0_PIN        PD0
-#define INT1_PIN        PD1
+#define INT0_PIN           PD0
 
-
+/*
 #define SPI_WL_PORT     PORTC
 #define SPI_WL_DDR      DDRC
 #define SPI_WL_CE       PC6
 #define SPI_WL_CSN      PC7
+*/
+
+#define SPI_WL_PORT     PORTD
+#define SPI_WL_DDR      DDRD
+#define SPI_WL_CE       PD1
+#define SPI_WL_CSN      PD2
 
 
-#define SPI_ADC_CE_PORT     PORTC
-#define SPI_ADC_CE_DDR      DDRC
-#define SPI_ADC_CE       PC6
+// SPI via Isolator
+#define SPI_EXT_PORT    PORTD
+#define SPI_EXT_DDR     DDRD
+#define SPI_EXT_CS      PD3 // CS fuer SPI via Isolator
+
+// Ausgang via Isolator
+#define SPI_AUX_PORT    PORTC
+#define SPI_AUX_DDR     DDRC
+#define SPI_AUX_A       PC6 // CS fuer SPI-Isolator-Aux-Kanal A
+
 
 #define ADC_BUFSIZE              4
 #define ADC_DELAY                   8
@@ -74,14 +86,6 @@
 #endif
 
 
-// ************************************************
-// Modifizierte Belegung fuer Betrieb mit Webserver
-// ************************************************
-
-#define SPI_CONTROL_MOSI		PORTD0					// Eingang fuer Daten zum Slave
-#define SPI_CONTROL_MISO		PORTD1					// Ausgang fuer Daten vom Slave
-#define SPI_CONTROL_SCK			PORTD2					// Ausgang fuer CLK
-
 
 
 
@@ -96,8 +100,8 @@
 
 // bits von hoststatus
 #define TEENSYPRESENT      7
-#define MESSUNG_OK      6
-#define DOWNLOAD_OK     5
+#define MESSUNG_OK         6
+#define DOWNLOAD_OK        5
 
 
 // bits von spistatus
@@ -106,6 +110,7 @@
 #define WRITE_STROM           2
 #define SPI_RUN_BIT           7
 
+/*
 #define SOFT_SPI_PORT           PORTB
 #define SOFT_SPI_DDR            DDRB
 #define SOFT_SPI_MISO           PB3
@@ -113,7 +118,7 @@
 #define SOFT_SPI_SCLK           PB1
 #define SOFT_SPI_SS_0            PB0
 #define SOFT_SPI_SS_1            PB0
-
+*/
 
 // USB buffer
 
@@ -195,9 +200,9 @@
 
 // Digi
 #define DIGI0         	28 	// Digi Eingang
-#define DIGI1          	29	// Digi Eingang
-#define DIGI2          	30	// Digi Eingang
-#define DIGI3          	31	// Digi Eingang
+#define DIGI1          	29    // Digi Eingang
+#define DIGI2          	30    // Digi Eingang
+#define DIGI3          	31    // Digi Eingang
 
 
 // Satellit

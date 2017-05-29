@@ -130,7 +130,7 @@ void wl_module_init()
    
    
    EICRA = ((1<<ISC01));
-   // Set external interupt on falling edge for INT0 and INT1
+   // Set external interupt on falling edge for INT0
    EIMSK  = ((1<<INT0));
    
 #endif // __AVR_ATmega32U4__

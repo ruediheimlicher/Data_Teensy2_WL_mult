@@ -558,7 +558,7 @@ void Master_Init(void)
    // ---------------------------------------------------
    LCD_DDR |= (1<<LCD_RSDS_PIN);		// PIN als Ausgang fuer LCD
    LCD_DDR |= (1<<LCD_ENABLE_PIN);	//Pin als Ausgang fuer LCD
-   LCD_DDR |= (1<<LCD_CLOCK_PIN);	//Pin 6 von PORT D als Ausgang fuer LCD
+   LCD_DDR |= (1<<LCD_CLOCK_PIN);	//Pin   als Ausgang fuer LCD
    
    
 }
@@ -579,7 +579,25 @@ void SPI_PORT_Init(void) // SPI-Pins aktivieren
    //SPI_PORT &= ~(1<<SPI_CLK); // LO
    SPI_DDR |= (1<<SPI_SS);
    SPI_PORT |= (1<<SPI_SS); // HI
-   
+  
+   /*
+    // SPI via Isolator
+#define SPI_EXT_PORT    PORTD
+#define SPI_EXT_DDR     DDRD
+#define SPI_EXT_CS      PD3 // CS fuer SPI via Isolator
+  */
+   SPI_EXT_DDR |= (1<<SPI_EXT_CS);
+   SPI_EXT_PORT |= (1<<SPI_EXT_CS); // HI
+
+   /*
+   // Ausgang via Isolator
+#define SPI_AUX_PORT    PORTC
+#define SPI_AUX_DDR     DDRC
+#define SPI_AUX_A       PC6 // CS fuer SPI-Isolator-Aux-Kanal A
+*/
+   SPI_AUX_DDR |= (1<<SPI_AUX_A);
+   SPI_AUX_PORT |= (1<<SPI_AUX_A); // HI
+
    
    /*
     // Slave init
@@ -596,12 +614,6 @@ void SPI_PORT_Init(void) // SPI-Pins aktivieren
    
 }
 
-void SPI_ADC_init(void) // SS-Pin fuer EE aktivieren
-{
-   
-   SPI_ADC_CE_DDR |= (1<<SPI_ADC_CE);
-   SPI_ADC_CE_PORT |= (1<<SPI_ADC_CE); // HI
-}
 
 void SPI_Master_init (void)
 {
@@ -649,6 +661,9 @@ void spi_start(void) // SPI-Pins aktivieren
    
    SPI_DDR |= (1<<SPI_SS);
    SPI_PORT |= (1<<SPI_SS); // HI
+   
+   
+   
 }
 
 void spi_end(void) // SPI-Pins deaktivieren
@@ -1121,7 +1136,6 @@ int main (void)
    Master_Init();
    SPI_PORT_Init();
    SPI_Master_init();
-//   SPI_ADC_init();
    
 //   uint16_t    ADC_Array[ADC_BUFSIZE];
    
@@ -1500,9 +1514,10 @@ int main (void)
           lcd_gotoxy(10,2);
           lcd_puthex(wl_status);
           */
- //        delay_ms(3);
-         
+         //delay_ms(1);
+         //OSZIB_LO;
          pipenummer = wl_module_get_rx_pipe_from_status(wl_status);
+         
          delay_ms(1);
 //         lcd_gotoxy(12,2);
  //        lcd_putc('p');
@@ -1518,8 +1533,8 @@ int main (void)
             //lcd_putc('*');
             wl_module_get_one_byte(FLUSH_TX);
             delay_ms(1);
-            //lcd_gotoxy(16,2);
-//            lcd_putc('?'); //
+ //           lcd_gotoxy(16,2);
+ //          lcd_putc('?'); //
 
             
          }
@@ -1561,7 +1576,7 @@ int main (void)
             if (wl_status & (1<<RX_DR)) // IRQ: Package has been received
             {
                //lcd_putc('h');
-                 OSZIA_LO; // 130ms mit Anzeige
+    //             OSZIA_LO; // 130ms mit Anzeige
                
                //              lcd_gotoxy(18,1);
                //               lcd_puts("  ");
@@ -1649,8 +1664,10 @@ int main (void)
                      sendbuffer[EXTADC12_2_LO]= wl_data[10];
                      sendbuffer[EXTADC12_2_HI]= wl_data[11];
                      
-                     //batteriespannung = (wl_data[8]<<8);
-                     batteriespannung = wl_data[7];
+                     batteriespannung = (wl_data[8]<<8);
+                     batteriespannung |= wl_data[7];
+                     
+                     
                    
                      sendbuffer[EXTADC1LO] = wl_data[7];
                      //sendbuffer[EXTADC1HI] = wl_data[8];
@@ -1692,6 +1709,7 @@ int main (void)
                wl_module_get_one_byte(FLUSH_RX);
                
                wl_module_get_one_byte(FLUSH_TX);
+               
                // pipe vorwaertsschalten
                
                delay_ms(5);
@@ -1713,7 +1731,7 @@ int main (void)
                lcd_gotoxy(9,1);
                lcd_putc('r');
                //delay_ms(10);
-               OSZIA_HI;
+ //              OSZIA_HI;
             }  // end if RX_DR
             
          } // if pipenummer <7
@@ -1928,8 +1946,14 @@ int main (void)
          lcd_putc(' ');
          
          
-         adcwert = adc_read(0);
-         
+         adcwert = adc_read(0); // Batteriespannung
+         adcfloat = adcfloat *2490/1024; // kalibrierung VREF, 1V zu 0.999, Faktor 10, 45 us
+         adcwert = (((uint16_t)adcfloat)&0xFFFF);
+
+         // Batteriespannung senden
+         sendbuffer[5] =  (adcwert & 0x00FF);
+         sendbuffer[6] = ((adcwert & 0xFF00)>>8);
+        
          //_delay_ms(100);
          
          
@@ -1947,14 +1971,9 @@ int main (void)
          sendbuffer[0]= MESSUNG_DATA;
          
          sendbuffer[2] = 27;
-         sendbuffer[5] = 28;//recvbuffer[STARTMINUTELO_BYTE];;
-         sendbuffer[6] = 29;//recvbuffer[STARTMINUTEHI_BYTE];;
+         
          
          sendbuffer[15] = 31; // Grenze zu DATA markieren
-         
-         // Data von ADC laden
-         //    sendbuffer[ADC0LO]= (adcwert & 0x00FF);
-         //    sendbuffer[ADC0HI]= ((adcwert & 0xFF00)>>8);
          
          
          
@@ -2061,7 +2080,7 @@ int main (void)
             sendbuffer[BLOCKOFFSETHI_BYTE] = (blockcounter & 0xFF00)>>8; // Nummer des geschriebenen Blocks hi
             
          } //end if usbstatus1 & (1<<SAVE_SD_STOP_BIT)
-         else if (! usb_configured()) //b kein USB
+         else if (! usb_configured()) // kein USB
          {
             lcd_gotoxy(8,1);
             lcd_puts("no USB");
@@ -2076,10 +2095,7 @@ int main (void)
          //OSZIA_LO;
          
          
-         adcfloat = adcfloat *2490/1024; // kalibrierung VREF, 1V > 0.999, Faktor 10, 45 us
-         
-         adcwert = (((uint16_t)adcfloat)&0xFFFF);
-         //OSZIA_HI;
+          //OSZIA_HI;
          
          uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
          //         lcd_gotoxy(10,0);
@@ -2167,26 +2183,14 @@ int main (void)
          
          
          delay_ms(3);
-         //wl_module_tx_config(2);
          
+         OSZIA_LO;
          // ***** PIPE *********************************************
-         
- //        if (OSZIPORTPIN & (1<<TEST_PIN))
-         {
- //           wl_module_tx_config(2);
-            
-         }
- //        else
-         {
-            
-            wl_module_tx_config_channel(loop_pipenummer,module_channel[loop_channelnummer]);
-         
-         }
+         wl_module_tx_config_channel(loop_pipenummer,module_channel[loop_channelnummer]);
          
          
-         
-         OSZIB_LO;
-         delay_ms(20); // etwas warten
+         //OSZIB_LO;
+         delay_ms(2); // etwas warten Neu 2 ms anstatt 20
          // WL
          payload[8] = loop_channelnummer;
          payload[9] = maincounter;
@@ -2202,7 +2206,7 @@ int main (void)
          // ***** SENDEN *****************************************************
          
          wl_module_send(payload,wl_module_PAYLOAD);
-         delay_ms(20);
+         delay_ms(2);
          wl_sendcounter++;
          
          datapendcounter=0;
@@ -2230,13 +2234,19 @@ int main (void)
          lcd_puthex(module_channel[loop_channelnummer]);
 */
          //wl_module_config_register(STATUS, (1<<TX_DS)); // ohne wirkung
-         delay_ms(10); // etwas warten, wichtig, sonst wird rt nicht immer erkannt
+         
+         // neu: red auf 2ms bei neuem Print
+         delay_ms(2); // etwas warten, wichtig, sonst wird rt nicht immer erkannt
+         
+         OSZIA_HI;
+         
+         
          lcd_gotoxy(11,1);
          wl_status = wl_module_get_status();
          //lcd_gotoxy(16,2);
          lcd_puthex(wl_status);
          
-         delay_ms(20);
+         delay_ms(2);
          //lcd_putc('a');
          wl_send_status |= (1<<7);
          
