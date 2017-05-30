@@ -52,6 +52,9 @@
 
 #define wl_module_CONFIG		( (1<<MASK_TX_DS) | (1<<EN_CRC) | (1<<CRCO) )
 
+// config ohne MASK_TX_DR
+//#define wl_module_CONFIG		( (1<<EN_CRC) | (1<<CRCO) )
+
 #define wl_module_TX_NR_0		0
 #define wl_module_TX_NR_1		1
 #define wl_module_TX_NR_2		2
