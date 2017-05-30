@@ -127,33 +127,21 @@
 #define SAVE_SD_RUN_BIT        1
 #define SAVE_SD_STOP_BIT        2
 
+
 // Bytes fuer Sicherungsort der Daten auf SD
 #define ABSCHNITT_BYTE     2
 #define BLOCKOFFSETLO_BYTE      3
 #define BLOCKOFFSETHI_BYTE      4
 
+#define  STARTMINUTELO_BYTE   5
+#define  STARTMINUTEHI_BYTE   6
 
-#define MESSUNG_START      0xC0
-#define MESSUNG_STOP       0xC1
-
-#define STARTSEKUNDELO_BYTE      5
-#define STARTSEKUNDEHI_BYTE      6
-
-#define DATENBREITE_BYTE         7
+//#define DATENBREITE_BYTE         7
 
 #define PACKETCOUNT_BYTE         8
 
 #define BLOCK_ANZAHL_BYTE              9 // anzajhl zu lesender Blocks
 #define DOWNLOADBLOCKNUMMER_BYTE      10 // aktuelle nummer des downloadblocks
-
-#define  STARTMINUTELO_BYTE   5
-#define  STARTMINUTEHI_BYTE   6
-
-
-#define TAKT_LO_BYTE 14
-#define TAKT_HI_BYTE 15
-
-#define DATA_START_BYTE   16    // erstes byte fuer Data auf USB
 
 
 
@@ -162,14 +150,20 @@
 
 
 
+// USB Ausgang
+#define SERVOALO           10
+#define SERVOAHI           11
+
 // USB Eingang
 // Temperatur
-#define DSLO               12
-#define DSHI               13
 
-//ADC interner ADC
-#define  ADCINTLO          30
-#define  ADCINTHI          31
+
+#define TAKT_LO_BYTE       14
+#define TAKT_HI_BYTE       15
+
+#define DATA_START_BYTE   16    // erstes byte fuer Data auf USB
+
+
 
 /*
 //ADC von extern
@@ -234,9 +228,9 @@
 //
 
 
-// USB Ausgang
-#define SERVOALO           10
-#define SERVOAHI           11
+
+
+
 
 // write SD
 #define WRITE_MMC_TEST     0xF1
@@ -254,7 +248,10 @@
 #define LOGGER_STOP        0xAF
 
 #define LOGGER_SETTING     0xB0 // Setzen der Settings fuer die Messungen
+
 #define MESSUNG_DATA        0xB1
+#define MESSUNG_START      0xC0
+#define MESSUNG_STOP       0xC1
 
 
 #define USB_STOP           0xAA

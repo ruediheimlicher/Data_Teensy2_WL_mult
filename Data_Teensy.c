@@ -165,7 +165,6 @@ static volatile uint8_t             usbstatus1=0x00; // recvbuffer[1]
 
 volatile uint8_t                    spistatus=0x00; // was ist zu tun infolge spi
 
-//static volatile uint8_t             eepromstatus=0x00;
 static volatile uint8_t             potstatus=0x00; // Bit 7 gesetzt, Mittelwerte setzen
 static volatile uint8_t             impulscounter=0x00;
 
@@ -179,7 +178,6 @@ volatile uint8_t status=0;
 
 
 // Logger
-volatile uint16_t messintervall = 1;
 volatile uint16_t saveSDposition = 0;
 volatile uint16_t blockcounter = 0; // Block, in den gesichert werden soll, mit einem Offset von 1 (Block 0 ist header der SD).
 volatile uint16_t startminute = 0; // Block, in den gesichert werden soll, mit einem Offset von 1 (Block 0 ist header der SD).
@@ -201,20 +199,6 @@ static volatile uint8_t spi_rxdata=0;
 static volatile uint8_t inindex=0;
 
 volatile char SPI_data='0';
-//volatile char SPI_dataArray[SPI_BUFSIZE];
-//volatile uint16_t Pot_Array[SPI_BUFSIZE];
-
-//volatile uint16_t Mitte_Array[8];
-
-//volatile uint8_t Level_Array[8]; // Levels fuer Kanaele, 1 byte pro kanal
-//volatile uint8_t Expo_Array[8]; // Levels fuer Kanaele, 1 byte pro kanal
-
-//volatile uint16_t Mix_Array[8];// Mixings, 2 8-bit-bytes pro Mixing
-
-
-//volatile uint16_t RAM_Array[SPI_BUFSIZE];
-
-//volatile uint8_t testdataarray[8]={};
 volatile uint16_t teststartadresse=0xA0;
 
 
@@ -328,13 +312,6 @@ volatile uint8_t                 blinkcounter=0;
 
 uint8_t                          ServoimpulsSchrittweite=10;
 uint16_t                         Servoposition[]={1000,1250,1500,1750,2000,1750,1500,1250};
-
-
-
-
-//volatile uint16_t                SPI_Data_counter; // Zaehler fuer Update des screens
-
-
 
 volatile uint16_t Tastenwert=0;
 volatile uint16_t Trimmtastenwert=0;
@@ -758,9 +735,7 @@ void delay_ms(unsigned int ms)/* delay for a minimum of <ms> */
 /*
  ISR(TIMER1_COMPB_vect)	 //Ende des Kanalimpuls. ca 0.3 ms
  {
- //OSZI_A_LO ;
  //PORTB &= ~(1<<PORTB5); // OC1A Ausgang
- //OSZI_A_HI ;
  KANAL_LO;
  
  if (impulscounter < ANZ_POT)
@@ -830,7 +805,6 @@ ISR(TIMER0_COMPA_vect)
    //OSZIA_LO;
    //lcd_putc('4');
    //lcd_putc('+');
-   //   Timer1--;          /* Performance counter for this module */
    mmc_disk_timerproc();	/* Drive timer procedure of low level disk I/O module */
    
    
@@ -839,7 +813,7 @@ ISR(TIMER0_COMPA_vect)
    {
       
       intervallcounter++;
-      if (intervallcounter >= 2*intervall)
+      if (intervallcounter >= intervall)
       {
          intervallcounter = 0;
          if (hoststatus & (1<<DOWNLOAD_OK))// Download von SD, Messungen unterbrechen
@@ -1139,15 +1113,7 @@ int main (void)
    
 //   uint16_t    ADC_Array[ADC_BUFSIZE];
    
-   volatile    uint8_t outcounter=0;
-   volatile    uint8_t testdata =0x00;
-   //  volatile    uint8_t testaddress =0x00;
-   volatile    uint8_t errcount =0x00;
-   //   volatile    uint8_t ram_indata=0;
    
-   //  volatile    uint8_t eeprom_indata=0;
-   //  volatile    uint8_t eeprom_testdata =0x00;
-   //  volatile    uint8_t eeprom_testaddress =0x00;
    uint8_t usb_readcount =0x00;
    
    // ---------------------------------------------------
@@ -1524,8 +1490,7 @@ int main (void)
 //         lcd_puthex(pipenummer);
          
          wl_spi_status &= ~(1<<WL_ISR_RECV);
-         
-         
+
          if (pipenummer == 7) // ungueltige pipenummer
          {
 //            lcd_gotoxy(12,3);
@@ -1535,8 +1500,6 @@ int main (void)
             delay_ms(1);
  //           lcd_gotoxy(16,2);
  //          lcd_putc('?'); //
-
-            
          }
          else
          {
@@ -1545,17 +1508,9 @@ int main (void)
             //lcd_putc('g');
             //lcd_gotoxy(16,1);
             //lcd_putc('-'); //
-            
-            //OSZIB_LO;
-            
             //lcd_gotoxy(12,2);
             //lcd_puthex(wl_status);
-            
-            
             //loop_pipenummer = pipenummer;
-            
-            
-            // MARK: WL Loop
             /*
              lcd_gotoxy(4,1);
              lcd_putc(' '); // pipenummer weg
@@ -1601,7 +1556,7 @@ int main (void)
                   lcd_putc('!');
                   lcd_puthex(rec);
                }
-               
+   // MARK: WL get Data
                // payload lesen
                uint8_t readstatus = wl_module_get_data((void*)&wl_data); // returns status
                delay_ms(1);
@@ -1723,6 +1678,10 @@ int main (void)
                   }
                   else
                   {
+                     OSZIA_LO;
+                     uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
+                     OSZIA_HI;
+                     
                      //loop_channelnummer=0;
                   }
                   
@@ -1857,7 +1816,6 @@ int main (void)
          //         mmcwritecounter++;
          
       }
-      //OSZI_A_TOGG;
       
       // **********************************************************
 #pragma mark Mess-Intervall
@@ -2097,7 +2055,9 @@ int main (void)
          
           //OSZIA_HI;
          
-         uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
+ //        uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
+ 
+         
          //         lcd_gotoxy(10,0);
          //lcd_putint(adcwert & 0x00FF);
          //lcd_putc(' ');
@@ -2112,7 +2072,7 @@ int main (void)
          wl_spi_status |= (1<<WL_SEND_REQUEST); // Auftrag an wl, Daten lesen
          loop_pipenummer = 1;
          loop_channelnummer=0;
-         temperatur0=0;
+//         temperatur0=0;
          // Messreihe auf wl starten
          //loop_pipenummer=1;
          
@@ -2184,7 +2144,7 @@ int main (void)
          
          delay_ms(3);
          
-         OSZIA_LO;
+         //OSZIA_LO;
          // ***** PIPE *********************************************
          wl_module_tx_config_channel(loop_pipenummer,module_channel[loop_channelnummer]);
          
@@ -2238,7 +2198,7 @@ int main (void)
          // neu: red auf 2ms bei neuem Print
          delay_ms(2); // etwas warten, wichtig, sonst wird rt nicht immer erkannt
          
-         OSZIA_HI;
+         //OSZIA_HI;
          
          
          lcd_gotoxy(11,1);
@@ -2283,6 +2243,7 @@ int main (void)
             }
             else
             {
+               
                //loop_channelnummer=1;
                //wl_spi_status |= (1<<WL_SEND_REQUEST);
             }
@@ -2494,11 +2455,8 @@ int main (void)
          // MARK:  USB send
          // neue Daten abschicken
          //         if ((usbtask & (1<<EEPROM_WRITE_PAGE_TASK) )) //|| usbtask & (1<<EEPROM_WRITE_BYTE_TASK))
-         //OSZI_C_LO;
          
          //   uint8_t anz = usb_rawhid_send((void*)sendbuffer, 50); // 20 us
-         //OSZI_C_HI;
-         //OSZI_A_HI;
          
          
       } // if loopcount0
@@ -2522,7 +2480,6 @@ int main (void)
       
       if (r > 0)
       {
-         //OSZI_A_LO ;
          cli();
          usb_readcount++;
          uint8_t code = recvbuffer[0];
@@ -2908,19 +2865,16 @@ int main (void)
          code=0;
          sei();
          
-         //OSZI_D_HI;
-         //OSZI_A_HI ;
+      
       } // r>0, neue Daten
       else
       {
-         //OSZI_B_LO;
       }
       
       /**	End USB-routinen	***********************/
       
       
       
-      //OSZI_B_HI;
       
    }//while
    //free (sendbuffer);

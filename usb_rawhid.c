@@ -297,19 +297,16 @@ void usb_shutdown(void) // https://forum.pjrc.com/archive/index.php/t-24987.html
 // receive a packet, with timeout
 int8_t usb_rawhid_recv(uint8_t *buffer, uint8_t timeout)
 {
-   //OSZI_B_LO ;
 	uint8_t intr_state;
 	// if we're not online (enumerated and configured), error
 	if (!usb_configuration)
    {
-      //OSZI_B_HI ;
       return -1;
    }
 	intr_state = SREG;
 	cli();
 	rx_timeout_count = timeout;
 	UENUM = RAWHID_RX_ENDPOINT;
-   //OSZI_B_HI ;
 	// wait for data to be available in the FIFO
 	while (1) 
    {
@@ -317,7 +314,6 @@ int8_t usb_rawhid_recv(uint8_t *buffer, uint8_t timeout)
 		SREG = intr_state;
 		if (rx_timeout_count == 0)
       {
-         //OSZI_B_HI ;
          return 0;
       }
 		if (!usb_configuration) return -1;
