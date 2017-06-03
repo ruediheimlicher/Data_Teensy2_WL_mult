@@ -1576,7 +1576,7 @@ int main (void)
                {
                   case 0: // TEMPERATUR
                   {
-                     temperatur0 = (wl_data[ADC2HI]<<8);
+                     temperatur0 = (wl_data[ADC2HI]<<8); // LM335
                      temperatur0 |= wl_data[ADC2LO];
                      //temperatur0 = temperatur1;
                      lcd_gotoxy(16,2);
@@ -1591,8 +1591,16 @@ int main (void)
                      lcd_puthex(wl_data[12]);
                      lcd_puthex(wl_data[13]);
                        */
-                     sendbuffer[EXTADC12_0_LO]= wl_data[ADC2LO];
-                     sendbuffer[EXTADC12_0_HI]= wl_data[ADC2HI];
+                     sendbuffer[ADC2LO  + DATA_START_BYTE]= wl_data[ADC2LO]; // LM335
+                     sendbuffer[ADC2HI  + DATA_START_BYTE]= wl_data[ADC2HI];
+                     
+                     sendbuffer[ADC3LO  + DATA_START_BYTE]= wl_data[ADC3LO]; // KTY
+                     sendbuffer[ADC3HI  + DATA_START_BYTE]= wl_data[ADC3HI];
+                     
+                     sendbuffer[ADC4LO  + DATA_START_BYTE]= wl_data[ADC4LO]; // PT1000
+                     sendbuffer[ADC4HI  + DATA_START_BYTE]= wl_data[ADC4HI];
+                     
+                     
                      /*
                      sendbuffer[ADC0LO]= wl_data[10];
                      sendbuffer[ADC0HI]= wl_data[11];
@@ -1619,8 +1627,8 @@ int main (void)
                       */
                      
                      
-                     sendbuffer[EXTADC12_1_LO]= wl_data[ADC2LO];
-                     sendbuffer[EXTADC12_1_HI]= wl_data[ADC2HI];
+                     sendbuffer[ADC2LO + DATA_START_BYTE]= wl_data[ADC2LO];
+                     sendbuffer[ADC2HI + DATA_START_BYTE]= wl_data[ADC2HI];
                      /*
                      sendbuffer[ADC0LO]= wl_data[10];
                      sendbuffer[ADC0HI]= wl_data[11];
@@ -1631,14 +1639,14 @@ int main (void)
                      spannung0 = (wl_data[BATTHI]<<8);
                      spannung0 |= wl_data[BATTLO];
                      
-                     sendbuffer[EXTADC12_2_LO]= wl_data[ADC1LO];
-                     sendbuffer[EXTADC12_2_HI]= wl_data[ADC1HI];
+                     sendbuffer[ADC1LO + DATA_START_BYTE]= wl_data[ADC1LO];
+                     sendbuffer[ADC1HI + DATA_START_BYTE]= wl_data[ADC1HI];
                      
                      
                      
                    
-                     sendbuffer[EXTADC1LO] = wl_data[BATTLO];
-                     sendbuffer[EXTADC1HI] = wl_data[BATTHI];
+                     sendbuffer[BATTLO + DATA_START_BYTE] = wl_data[BATTLO];
+                     sendbuffer[BATTHI + DATA_START_BYTE] = wl_data[BATTHI];
                      
                   }break;
                   case 3:
