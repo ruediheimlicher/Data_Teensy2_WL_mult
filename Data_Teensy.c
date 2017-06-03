@@ -1566,14 +1566,18 @@ int main (void)
                lcd_putc(' ');
                lcd_putc(' ');
                
+               batteriespannung = (wl_data[BATTHI]<<8);
+               batteriespannung |= wl_data[BATTLO];
+
+               
                // task je nach pipenummer
                
                switch(loop_channelnummer)
                {
-                  case 0:
+                  case 0: // TEMPERATUR
                   {
-                     temperatur0 = (wl_data[13]<<8);
-                     temperatur0 |= wl_data[12];
+                     temperatur0 = (wl_data[ADC2HI]<<8);
+                     temperatur0 |= wl_data[ADC2LO];
                      //temperatur0 = temperatur1;
                      lcd_gotoxy(16,2);
                      lcd_putc('A');
@@ -1587,8 +1591,8 @@ int main (void)
                      lcd_puthex(wl_data[12]);
                      lcd_puthex(wl_data[13]);
                        */
-                     sendbuffer[EXTADC12_0_LO]= wl_data[12];
-                     sendbuffer[EXTADC12_0_HI]= wl_data[13];
+                     sendbuffer[EXTADC12_0_LO]= wl_data[ADC2LO];
+                     sendbuffer[EXTADC12_0_HI]= wl_data[ADC2HI];
                      /*
                      sendbuffer[ADC0LO]= wl_data[10];
                      sendbuffer[ADC0HI]= wl_data[11];
@@ -1596,11 +1600,12 @@ int main (void)
                      lcd_puthex(wl_data[0]);// maincounter von remote module
                      */
                   }break;
-                  case 1:
+                     
+                  case 1: // ADC12BIT
                   {
                      
-                     temperatur1 = (wl_data[13]<<8);
-                     temperatur1 |= wl_data[12];
+                     temperatur1 = (wl_data[ADC2HI]<<8);
+                     temperatur1 |= wl_data[ADC2LO];
                      //temperatur0 = temperatur1;
                      lcd_gotoxy(17,2);
                      lcd_putc('B');
@@ -1614,8 +1619,8 @@ int main (void)
                       */
                      
                      
-                     sendbuffer[EXTADC12_1_LO]= wl_data[12];
-                     sendbuffer[EXTADC12_1_HI]= wl_data[13];
+                     sendbuffer[EXTADC12_1_LO]= wl_data[ADC2LO];
+                     sendbuffer[EXTADC12_1_HI]= wl_data[ADC2HI];
                      /*
                      sendbuffer[ADC0LO]= wl_data[10];
                      sendbuffer[ADC0HI]= wl_data[11];
@@ -1623,19 +1628,17 @@ int main (void)
                      lcd_puthex(wl_data[0]);// maincounter von remote module
                      */
                      // Batteriersp
-                     spannung0 = (wl_data[11]<<8);
-                     spannung0 |= wl_data[10];
+                     spannung0 = (wl_data[BATTHI]<<8);
+                     spannung0 |= wl_data[BATTLO];
                      
-                     sendbuffer[EXTADC12_2_LO]= wl_data[10];
-                     sendbuffer[EXTADC12_2_HI]= wl_data[11];
+                     sendbuffer[EXTADC12_2_LO]= wl_data[ADC1LO];
+                     sendbuffer[EXTADC12_2_HI]= wl_data[ADC1HI];
                      
-                     batteriespannung = (wl_data[8]<<8);
-                     batteriespannung |= wl_data[7];
                      
                      
                    
-                     sendbuffer[EXTADC1LO] = wl_data[7];
-                     //sendbuffer[EXTADC1HI] = wl_data[8];
+                     sendbuffer[EXTADC1LO] = wl_data[BATTLO];
+                     sendbuffer[EXTADC1HI] = wl_data[BATTHI];
                      
                   }break;
                   case 3:
