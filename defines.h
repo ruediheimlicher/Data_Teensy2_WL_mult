@@ -165,39 +165,20 @@
 
 
 // Ports Atmega8
-#define COUNTER    0
-#define TASKBYTE    1
-#define CHANNEL    2
+#define DEVICE    0 // TASK & maincounter
+#define CHANNEL   1
+#define BATT      2
 
-#define BATTLO    7
-#define BATTHI    8
+#define ANALOG0    3
 
+#define ANALOG1    5
 
-#define ADC0LO    8
-#define ADC0HI    9
-#define ADC1LO    10
-#define ADC1HI    11
-#define ADC2LO    12
-#define ADC2HI    13
-#define ADC3LO    14
-#define ADC3HI    15
-#define ADC4LO    16
-#define ADC4HI    17
+#define ANALOG2    7
 
-#define ADC12_0_LO    20
-#define ADC12_0_HI    21
-#define ADC12_1_LO    22
-#define ADC12_1_HI    23
-#define ADC12_2_LO    24
-#define ADC12_2_HI    25
-#define ADC12_3_LO    26
-#define ADC12_3_HI    27
+#define ANALOG3    9
 
-
-#define DIGI0    28
-#define DIGI1    29
-#define DIGI2    30
-#define DIGI3    31
+#define DIGI0    13
+#define DIGI1    14
 
 /*
 //ADC von extern

@@ -1565,19 +1565,26 @@ int main (void)
                lcd_putc(' ');
                lcd_putc(' ');
                lcd_putc(' ');
-               
-               batteriespannung = (wl_data[BATTHI]<<8);
-               batteriespannung |= wl_data[BATTLO];
 
                
-               // task je nach pipenummer
+               batteriespannung = (wl_data[BATT]);
+
+               sendbuffer[BATT  + DATA_START_BYTE]= wl_data[BATT];
+               
+               sendbuffer[DEVICE + DATA_START_BYTE] = 0;
+               
+         //      sendbuffer[DEVICE + DATA_START_BYTE] = wl_data[DEVICE]& 0x0F; // Wer sendet Daten? Sollte Devicenummer sein
+               // task je nach channelnummer
                
                switch(loop_channelnummer)
                {
                   case 0: // TEMPERATUR
                   {
-                     temperatur0 = (wl_data[ADC2HI]<<8); // LM335
-                     temperatur0 |= wl_data[ADC2LO];
+                     sendbuffer[DEVICE + DATA_START_BYTE] = wl_data[DEVICE]& 0x0F; // Wer sendet Daten? Sollte Devicenummer sein
+                    sendbuffer[CHANNEL + DATA_START_BYTE] = wl_data[CHANNEL]& 0x0F; // Wer sendet Daten? Sollte Devicenummer sein
+
+                     temperatur0 = (wl_data[ANALOG2+1]<<8); // LM335
+                     temperatur0 |= wl_data[ANALOG2];
                      //temperatur0 = temperatur1;
                      lcd_gotoxy(16,2);
                      lcd_putc('A');
@@ -1591,15 +1598,16 @@ int main (void)
                      lcd_puthex(wl_data[12]);
                      lcd_puthex(wl_data[13]);
                        */
-                     sendbuffer[ADC2LO  + DATA_START_BYTE]= wl_data[ADC2LO]; // LM335
-                     sendbuffer[ADC2HI  + DATA_START_BYTE]= wl_data[ADC2HI];
+                     sendbuffer[ANALOG0  + DATA_START_BYTE]= wl_data[ANALOG0]; // LM335
+                     sendbuffer[ANALOG0+1  + DATA_START_BYTE]= wl_data[ANALOG0+1];
                      
-                     sendbuffer[ADC3LO  + DATA_START_BYTE]= wl_data[ADC3LO]; // KTY
-                     sendbuffer[ADC3HI  + DATA_START_BYTE]= wl_data[ADC3HI];
+                     sendbuffer[ANALOG1  + DATA_START_BYTE]= wl_data[ANALOG1]; // KTY
+                     sendbuffer[ANALOG1+1  + DATA_START_BYTE]= wl_data[ANALOG1+1];
                      
-                     sendbuffer[ADC4LO  + DATA_START_BYTE]= wl_data[ADC4LO]; // PT1000
-                     sendbuffer[ADC4HI  + DATA_START_BYTE]= wl_data[ADC4HI];
-                     
+                     sendbuffer[ANALOG2  + DATA_START_BYTE]= wl_data[ANALOG2]; // PT1000
+                     sendbuffer[ANALOG2+1  + DATA_START_BYTE]= wl_data[ANALOG2+1];
+  
+ 
                      
                      /*
                      sendbuffer[ADC0LO]= wl_data[10];
@@ -1611,9 +1619,11 @@ int main (void)
                      
                   case 1: // ADC12BIT
                   {
-                     
-                     temperatur1 = (wl_data[ADC2HI]<<8);
-                     temperatur1 |= wl_data[ADC2LO];
+                     sendbuffer[DEVICE + DATA_START_BYTE] = wl_data[DEVICE]& 0x0F; // Wer sendet Daten? Sollte Devicenummer sein
+                     sendbuffer[CHANNEL + DATA_START_BYTE] = wl_data[CHANNEL]& 0x0F; // Wer sendet Daten? Sollte Devicenummer sein
+
+                     temperatur1 = (wl_data[ANALOG2+1]<<8);
+                     temperatur1 |= wl_data[ANALOG2];
                      //temperatur0 = temperatur1;
                      lcd_gotoxy(17,2);
                      lcd_putc('B');
@@ -1627,39 +1637,44 @@ int main (void)
                       */
                      
                      
-                     sendbuffer[ADC2LO + DATA_START_BYTE]= wl_data[ADC2LO];
-                     sendbuffer[ADC2HI + DATA_START_BYTE]= wl_data[ADC2HI];
+                     sendbuffer[ANALOG0 + DATA_START_BYTE]= wl_data[ANALOG0];
+                     sendbuffer[ANALOG0+1 + DATA_START_BYTE]= wl_data[ANALOG0+1];
+
+                     sendbuffer[ANALOG1 + DATA_START_BYTE]= wl_data[ANALOG1];
+                     sendbuffer[ANALOG1+1 + DATA_START_BYTE]= wl_data[ANALOG1+1];
+
+                     sendbuffer[ANALOG2 + DATA_START_BYTE]= wl_data[ANALOG2];
+                     sendbuffer[ANALOG2+1 + DATA_START_BYTE]= wl_data[ANALOG2+1];
+                     
+                     sendbuffer[ANALOG3 + DATA_START_BYTE]= wl_data[ANALOG3];
+                     sendbuffer[ANALOG3+1 + DATA_START_BYTE]= wl_data[ANALOG3+1];
+                     
                      /*
                      sendbuffer[ADC0LO]= wl_data[10];
                      sendbuffer[ADC0HI]= wl_data[11];
                      lcd_gotoxy(18,3);
                      lcd_puthex(wl_data[0]);// maincounter von remote module
                      */
-                     // Batteriersp
-                     spannung0 = (wl_data[BATTHI]<<8);
-                     spannung0 |= wl_data[BATTLO];
+                     // Batterierspannung
+                     spannung0 = (wl_data[BATT]);
+                    
+                     sendbuffer[BATT + DATA_START_BYTE] = wl_data[BATT];
                      
-                     sendbuffer[ADC1LO + DATA_START_BYTE]= wl_data[ADC1LO];
-                     sendbuffer[ADC1HI + DATA_START_BYTE]= wl_data[ADC1HI];
+                  }break;
                      
-                     
-                     
-                   
-                     sendbuffer[BATTLO + DATA_START_BYTE] = wl_data[BATTLO];
-                     sendbuffer[BATTHI + DATA_START_BYTE] = wl_data[BATTHI];
-                     
+                  case 2:
+                  {
+                      //sendbuffer[DEVICE + DATA_START_BYTE] = wl_data[DEVICE]& 0x0F; // Wer sendet Daten? Sollte Devicenummer sein
+
                   }break;
                   case 3:
                   {
-                     
-                  }break;
-                  case 4:
-                  {
-                     
+                      //sendbuffer[DEVICE + DATA_START_BYTE] = wl_data[DEVICE]& 0x0F; // Wer sendet Daten? Sollte Devicenummer sein
+
                   }break;
                      
                      
-               }// switch pipenummer
+               }// switch loop_channelnummer
                
                
                
@@ -1717,6 +1732,10 @@ int main (void)
                }
                if (hoststatus & (1<< TEENSYPRESENT))
                {
+                  
+                  lcd_gotoxy(6+2*loop_channelnummer,2);
+                  lcd_putint2(sendbuffer[DEVICE]&0x0F);
+                  
                   //OSZIA_LO;
                   uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
                   //OSZIA_HI;
@@ -1729,7 +1748,7 @@ int main (void)
  //              OSZIA_HI;
             }  // end if RX_DR
             
-         } // if pipenummer <7
+         } // if pipenummer gueltig (<7)
  
          
             if (wl_status & (1<<TX_DS)) // IRQ: Package has been sent
@@ -1802,6 +1821,10 @@ int main (void)
       
       
       
+      
+      
+      
+      
       // ********
       
       
@@ -1860,58 +1883,14 @@ int main (void)
       // **********************************************************
       uint16_t adcwert=0;
       float adcfloat=0;
+
       if (hoststatus & (1<<MESSUNG_OK)) // Intervall abgelaufen. In ISR gesetzt, Messungen vornehmen
       {
+         lcd_gotoxy(6,2);
+         lcd_puts("        ");
+
          /*
-          // teensy
-          //ADC
-          ADC 0 lo
-          ADC 0 hi
-          ADC 1 lo
-          ADC 1 hi
-          
-          //MC3204 12Bit
-          ADC 12bit lo
-          ADC 12bit hi
-          ADC 12bit lo
-          ADC 12bit hi
-          ADC 12bit lo
-          ADC 12bit hi
-          ADC 12bit lo
-          ADC 12bit hi
-          
-          // Digi
-          Digi Eingang
-          Digi Eingang
-          Digi Eingang
-          Digi Eingang
-          
-          
-          // Satellit
-          //ADC
-          ADC 0 lo
-          ADC 0 hi
-          ADC 1 lo
-          ADC 1 hi
-          
-          //MC3204 12Bit
-          ADC 12bit lo
-          ADC 12bit hi
-          ADC 12bit lo
-          ADC 12bit hi
-          ADC 12bit lo
-          ADC 12bit hi
-          ADC 12bit lo
-          ADC 12bit hi
-          
-          // Digi
-          Digi Eingang
-          Digi Eingang
-          Digi Eingang
-          Digi Eingang
-          
-          
-          */
+           */
          
          if (usb_configured())
          {
@@ -2141,8 +2120,8 @@ int main (void)
          lcd_gotoxy(9,1);
          lcd_puts(" "); // senden markieren, wird in WL_ISR_RECV-Routine mit r ueberschrieben
          
-         lcd_gotoxy(14,3);
-         lcd_puts("   ");
+         //lcd_gotoxy(14,3);
+         //lcd_puts("   ");
          
          // WL write start
          
@@ -2391,17 +2370,17 @@ int main (void)
          lcd_putint12(temperatur1);
 
          
-         lcd_gotoxy(8,3);
-         lcd_putc('v');
+         //lcd_gotoxy(8,3);
+         //lcd_putc('v');
         // lcd_putc('1');
          //lcd_putc(' ');
-         lcd_putint12(spannung0);
+         //lcd_putint12(spannung0);
          
-         lcd_gotoxy(8,2);
-         lcd_putc('b');
+         //lcd_gotoxy(8,2);
+         //lcd_putc('b');
          // lcd_putc('1');
          //lcd_putc(' ');
-         lcd_putint(batteriespannung);
+         //lcd_putint(batteriespannung);
         /*
          uint32_t spannung= spannung0 * 25.9/1023;
          lcd_putc(' ');
@@ -2861,10 +2840,10 @@ int main (void)
                
                // intervall
                intervall = recvbuffer[TAKT_LO_BYTE] | (recvbuffer[TAKT_HI_BYTE]<<8);
-               lcd_gotoxy(14,2);
-               lcd_putc('i');
-               lcd_putc(':');
-               lcd_putint(intervall);
+               //lcd_gotoxy(14,2);
+               //lcd_putc('i');
+               //lcd_putc(':');
+               //lcd_putint(intervall);
 
                
                abschnittnummer = recvbuffer[ABSCHNITT_BYTE]; // Abschnitt,
