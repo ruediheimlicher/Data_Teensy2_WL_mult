@@ -38,7 +38,7 @@ static uint8_t aref = (1<<REFS0)|(1<<REFS1); // default to AREF = Vcc
 #endif
 #endif
 
-
+volatile uint8_t VREF_Quelle = 0;
 extern struct adcwert16 ADCWert16;
 
 //struct adcwert16 readKanal16Bit(uint8_t kanal);

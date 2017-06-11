@@ -46,6 +46,9 @@
 // USB
 #define CPU_PRESCALE(n)	(CLKPR = 0x80, CLKPR = (n))
 
+#define VREF 259 // gemessene Vref
+
+
 #define LOOPDELAY 5
 
 #define SERVOMAX  4400
@@ -91,6 +94,7 @@ const uint16_t KTY[] PROGMEM =
    0xD5A1,	0xD855,	0xDAF3,	0xDD9B,	0xE072,	0xE333,	0xE624,	0xE8FD,
   };
 
+volatile uint16_t    ADC_Array[ADC_BUFSIZE] = {};
 
 uint16_t key_state;				// debounced key state:
 // bit = 1: key pressed
@@ -257,7 +261,9 @@ volatile uint8_t loop_channelnummer = 0;
 
 volatile uint8_t akt_pipenummer = 1;
 
-volatile uint8_t module_channel[4] = {wl_module_Temp_channel,wl_module_ADC_channel,wl_module_Temp_channel,wl_module_ADC_channel};
+//volatile uint8_t module_channel[4] = {wl_module_Temp_channel,wl_module_ADC_channel,wl_module_Temp_channel,wl_module_ADC_channel};
+
+volatile uint8_t module_channel[4] = {wl_module_Temp_channel,wl_module_ADC_channel,wl_module_ADC12BIT_channel,wl_module_AUX_channel};
 
 
 
@@ -266,6 +272,7 @@ volatile uint8_t wl_sendcounter=0;
 
 volatile uint16_t temperatur0=0;
 volatile uint16_t temperatur1=0;
+
 
 volatile uint16_t spannung0=0;
 
@@ -663,6 +670,51 @@ void spi_end(void) // SPI-Pins deaktivieren
  
  }
  */
+
+uint16_t read_LM35(uint8_t lm35kanal)
+{
+   if (! (VREF_Quelle == ADC_REF_INTERNAL))
+   {
+      VREF_Quelle = ADC_REF_INTERNAL;
+      uint8_t i=0;
+      for (i=0;i<16;i++) // 3.5ms  // Warten auf neueinstellung von Vref
+      {
+         readKanal(lm35kanal);
+      }
+   }
+   uint16_t adc2wert = readKanal(lm35kanal);
+   uint32_t temperatur2 = adc2wert;
+   temperatur2 *=VREF;
+   temperatur2 = temperatur2/0x20;
+   temperatur2 = 10*temperatur2/0x20;
+   //   lcd_gotoxy(8,3);
+   //   lcd_putint12(temperatur2&0xFFFF);
+   return temperatur2 & 0xFFFF;
+}
+
+uint16_t read_bat(uint8_t batkanal)
+{
+   if (! (VREF_Quelle == ADC_REF_INTERNAL))
+   {
+      VREF_Quelle = ADC_REF_INTERNAL;
+      uint8_t i=0;
+      for (i=0;i<16;i++) // 3.5ms  // Warten auf neueinstellung von Vref
+      {
+         readKanal(batkanal);
+      }
+   }
+   uint8_t i=0;
+   uint16_t adc2wert = readKanal(batkanal);
+   uint32_t temperatur2 = adc2wert;
+   temperatur2 *=VREF;
+   temperatur2 = temperatur2/0x20;
+   temperatur2 = 10*temperatur2/0x20;
+   
+   //   lcd_gotoxy(8,3);
+   //   lcd_putint12(temperatur2&0xFFFF);
+   return temperatur2 & 0xFFFF;
+}
+
 
 void delay_ms(unsigned int ms)/* delay for a minimum of <ms> */
 {
@@ -1502,24 +1554,6 @@ int main (void)
          }
          else
          {
-
-//            lcd_gotoxy(12,3);
-//            lcd_putc('-');
-            //lcd_putc('g');
-            //lcd_gotoxy(16,1);
-            //lcd_putc('-'); //
-            //lcd_gotoxy(12,2);
-            //lcd_puthex(wl_status);
-            //loop_pipenummer = pipenummer;
-            /*
-             lcd_gotoxy(4,1);
-             lcd_putc(' '); // pipenummer weg
-             
-             lcd_gotoxy(0,1);
-             lcd_puts("  "); // RX weg
-             lcd_gotoxy(14,1);
-             lcd_puts("  "); // TX weg
-             */
             
             if (wl_status & (1<<TX_FULL))
             {
@@ -1560,44 +1594,44 @@ int main (void)
                // payload lesen
                uint8_t readstatus = wl_module_get_data((void*)&wl_data); // returns status
                delay_ms(1);
-               lcd_gotoxy(16,2);
-               lcd_putc(' ');
-               lcd_putc(' ');
-               lcd_putc(' ');
-               lcd_putc(' ');
+               //lcd_gotoxy(16,2);
+               //lcd_putc(' ');
+              // lcd_putc(' ');
+              // lcd_putc(' ');
+              // lcd_putc(' ');
 
                
                batteriespannung = (wl_data[BATT]);
 
-               sendbuffer[BATT  + DATA_START_BYTE]= wl_data[BATT];
-               
-               sendbuffer[DEVICE + DATA_START_BYTE] = 0;
                
          //      sendbuffer[DEVICE + DATA_START_BYTE] = wl_data[DEVICE]& 0x0F; // Wer sendet Daten? Sollte Devicenummer sein
                // task je nach channelnummer
-               
+               sendbuffer[DEVICE + DATA_START_BYTE] = 0;
+
                switch(loop_channelnummer)
                {
                   case 0: // TEMPERATUR
                   {
+                     sendbuffer[BATT  + DATA_START_BYTE]= wl_data[BATT]; // Batteriespannung des device
+                     
                      sendbuffer[DEVICE + DATA_START_BYTE] = wl_data[DEVICE]& 0x0F; // Wer sendet Daten? Sollte Devicenummer sein
-                    sendbuffer[CHANNEL + DATA_START_BYTE] = wl_data[CHANNEL]& 0x0F; // Wer sendet Daten? Sollte Devicenummer sein
-
+                     sendbuffer[CHANNEL + DATA_START_BYTE] = wl_data[CHANNEL]& 0x0F; // Wer sendet Daten? Sollte Devicenummer sein
+                     
                      temperatur0 = (wl_data[ANALOG2+1]<<8); // LM335
                      temperatur0 |= wl_data[ANALOG2];
                      //temperatur0 = temperatur1;
-                     lcd_gotoxy(16,2);
-                     lcd_putc('A');
+                     //lcd_gotoxy(16,2);
+                     //lcd_putc('A');
                      /*
-                     lcd_gotoxy(0,2);
-                     lcd_putc('t');
-                     lcd_putc('0');
-                     lcd_putc(' ');
-                     lcd_putint(temperatur0);
-                     lcd_putc(' ');
-                     lcd_puthex(wl_data[12]);
-                     lcd_puthex(wl_data[13]);
-                       */
+                      lcd_gotoxy(0,2);
+                      lcd_putc('t');
+                      lcd_putc('0');
+                      lcd_putc(' ');
+                      lcd_putint(temperatur0);
+                      lcd_putc(' ');
+                      lcd_puthex(wl_data[12]);
+                      lcd_puthex(wl_data[13]);
+                      */
                      sendbuffer[ANALOG0  + DATA_START_BYTE]= wl_data[ANALOG0]; // LM335
                      sendbuffer[ANALOG0+1  + DATA_START_BYTE]= wl_data[ANALOG0+1];
                      
@@ -1606,27 +1640,33 @@ int main (void)
                      
                      sendbuffer[ANALOG2  + DATA_START_BYTE]= wl_data[ANALOG2]; // PT1000
                      sendbuffer[ANALOG2+1  + DATA_START_BYTE]= wl_data[ANALOG2+1];
-  
- 
+                     
+                     
                      
                      /*
-                     sendbuffer[ADC0LO]= wl_data[10];
-                     sendbuffer[ADC0HI]= wl_data[11];
-                     lcd_gotoxy(18,2);
-                     lcd_puthex(wl_data[0]);// maincounter von remote module
-                     */
+                      sendbuffer[ADC0LO]= wl_data[10];
+                      sendbuffer[ADC0HI]= wl_data[11];
+                      lcd_gotoxy(18,2);
+                      lcd_puthex(wl_data[0]);// maincounter von remote module
+                      */
                   }break;
                      
                   case 1: // ADC12BIT
                   {
+                     sendbuffer[BATT  + DATA_START_BYTE]= wl_data[BATT]; // Batteriespannung des device
+
                      sendbuffer[DEVICE + DATA_START_BYTE] = wl_data[DEVICE]& 0x0F; // Wer sendet Daten? Sollte Devicenummer sein
                      sendbuffer[CHANNEL + DATA_START_BYTE] = wl_data[CHANNEL]& 0x0F; // Wer sendet Daten? Sollte Devicenummer sein
 
+                     
+                     
+                     
+                     
                      temperatur1 = (wl_data[ANALOG2+1]<<8);
                      temperatur1 |= wl_data[ANALOG2];
                      //temperatur0 = temperatur1;
-                     lcd_gotoxy(17,2);
-                     lcd_putc('B');
+                     //lcd_gotoxy(17,2);
+                     //lcd_putc('B');
 
                      /*
                      lcd_gotoxy(0,3);
@@ -1639,16 +1679,29 @@ int main (void)
                      
                      sendbuffer[ANALOG0 + DATA_START_BYTE]= wl_data[ANALOG0];
                      sendbuffer[ANALOG0+1 + DATA_START_BYTE]= wl_data[ANALOG0+1];
+                     uint16_t temp = (wl_data[ANALOG0+1] <<8 |  wl_data[ANALOG0]);
+                     ADC_Array[0] =  temp; // (wl_data[ANALOG0+1] <<8 |  wl_data[ANALOG0]);
 
                      sendbuffer[ANALOG1 + DATA_START_BYTE]= wl_data[ANALOG1];
                      sendbuffer[ANALOG1+1 + DATA_START_BYTE]= wl_data[ANALOG1+1];
+                     
+                     temp = (wl_data[ANALOG1+1] <<8 | wl_data[ANALOG1]);
+                     
+                     ADC_Array[1] =  temp; // (wl_data[ANALOG1+1] <<8 |  wl_data[ANALOG1]);
 
                      sendbuffer[ANALOG2 + DATA_START_BYTE]= wl_data[ANALOG2];
                      sendbuffer[ANALOG2+1 + DATA_START_BYTE]= wl_data[ANALOG2+1];
                      
+                     temp = (wl_data[ANALOG2+1] <<8 |  wl_data[ANALOG2]);
+                     ADC_Array[2] =  temp; //(wl_data[ANALOG2+1] <<8);
+                     //ADC_Array[2] =  wl_data[ANALOG2];
+                     
+
                      sendbuffer[ANALOG3 + DATA_START_BYTE]= wl_data[ANALOG3];
                      sendbuffer[ANALOG3+1 + DATA_START_BYTE]= wl_data[ANALOG3+1];
-                     
+                     temp = (wl_data[ANALOG3+1] <<8 |  wl_data[ANALOG3]);
+                     ADC_Array[3] =  temp; //(wl_data[ANALOG3+1] <<8 |  wl_data[ANALOG3]);
+
                      /*
                      sendbuffer[ADC0LO]= wl_data[10];
                      sendbuffer[ADC0HI]= wl_data[11];
@@ -1707,6 +1760,10 @@ int main (void)
                delay_ms(5);
                //if (loop_pipenummer == pipenummer)
                {
+                  lcd_gotoxy(5+2*loop_channelnummer,1);
+                  lcd_putc('r');
+  
+                  
                   if (loop_channelnummer < 3)
                   {
 
@@ -1733,8 +1790,8 @@ int main (void)
                if (hoststatus & (1<< TEENSYPRESENT))
                {
                   
-                  lcd_gotoxy(6+2*loop_channelnummer,2);
-                  lcd_putint2(sendbuffer[DEVICE]&0x0F);
+               //   lcd_gotoxy(6+2*loop_channelnummer,2);
+               //   lcd_putint2(sendbuffer[DEVICE]&0x0F);
                   
                   //OSZIA_LO;
                   uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
@@ -1742,8 +1799,6 @@ int main (void)
                }
                wl_module_config_register(STATUS, (1<<RX_DR)); //Clear Interrupt Bit
                //delay_ms(50);
-               lcd_gotoxy(9,1);
-               lcd_putc('r');
                //delay_ms(10);
  //              OSZIA_HI;
             }  // end if RX_DR
@@ -1886,8 +1941,8 @@ int main (void)
 
       if (hoststatus & (1<<MESSUNG_OK)) // Intervall abgelaufen. In ISR gesetzt, Messungen vornehmen
       {
-         lcd_gotoxy(6,2);
-         lcd_puts("        ");
+         //lcd_gotoxy(6,2);
+         //lcd_puts("        ");
 
          /*
            */
@@ -1932,8 +1987,12 @@ int main (void)
          lcd_putint2(messungcounter&0x07);
          lcd_putc(' ');
          
+        // adcfloat = adcfloat *2490/1024; // kalibrierung VREF, 1V zu 0.999, Faktor 10, 45 us
+         //adcwert = (((uint16_t)adcfloat)&0xFFFF);
+
          
-         adcwert = adc_read(0); // Batteriespannung
+         adcwert = read_bat(0); // Batteriespannung
+         
          adcfloat = adcfloat *2490/1024; // kalibrierung VREF, 1V zu 0.999, Faktor 10, 45 us
          adcwert = (((uint16_t)adcfloat)&0xFFFF);
 
@@ -1967,6 +2026,9 @@ int main (void)
          //zaehler laden
          sendbuffer[DATACOUNT_LO] = (messungcounter & 0x00FF);
          sendbuffer[DATACOUNT_HI] = ((messungcounter & 0xFF00)>>8);
+         
+         // ADC lesen
+         
          
          /*
           usbstatus1
@@ -2188,7 +2250,7 @@ int main (void)
          payload[10] = adcwert & 0x00FF;
          payload[11] = (adcwert & 0xFF00)>>8;
          
-         lcd_gotoxy(9,1);
+         lcd_gotoxy(4+2*loop_channelnummer,1);
          lcd_putc('s');
 
          
@@ -2356,8 +2418,12 @@ int main (void)
          lcd_putc('t');
          lcd_putc('0');
          lcd_putc(' ');
-         lcd_putint(temperatur0);
-         lcd_putc(' ');
+         
+         uint8_t i=0;
+         
+         
+         //lcd_putint(temperatur0);
+         //lcd_putc(' ');
  //        lcd_puthex(wl_data[12]);
   //       lcd_puthex(wl_data[13]);
          
@@ -2366,10 +2432,29 @@ int main (void)
          lcd_gotoxy(0,3);
          lcd_putc('t');
          lcd_putc('1');
-         lcd_putc(' ');
-         lcd_putint12(temperatur1);
-
+         //lcd_putc(' ');
+         //lcd_putint999(temperatur1);
+         //lcd_putc(' ');
          
+         lcd_gotoxy(3,2);
+         /*
+         lcd_putint999(adc0);
+         lcd_putc(' ');
+         lcd_putint999(adc1);
+         lcd_putc(' ');
+         lcd_putint999(adc2);
+         lcd_putc(' ');
+         lcd_putint999(adc3);
+         lcd_putc(' ');
+         //lcd_putint999(ADC_Array[2]);
+         */
+         
+         for (i=0;i<4;i++)
+         {
+            lcd_putint999(ADC_Array[i]);
+            lcd_putc(' ');
+         }
+        
          //lcd_gotoxy(8,3);
          //lcd_putc('v');
         // lcd_putc('1');

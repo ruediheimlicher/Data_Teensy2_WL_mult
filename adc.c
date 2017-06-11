@@ -15,17 +15,15 @@
 
 void initADC(uint8_t derKanal)
 {
+   VREF_Quelle = ADC_REF_POWER;
+   
    //ADCSRA = (1<<ADEN) |(1<<ADPS2) | (1<<ADPS0);
    ADCSRA = (1<<ADEN) | ADC_PRESCALER;       // Frequenzvorteiler auf 32 setzen und ADC aktivieren
    ADCSRB = (1<<ADHSM) | (derKanal & 0x20);  // high speed mode
   
-   ADMUX = aref | (derKanal & 0x1F);         // configure mux input und Ÿbergebenen Kanal waehlen
+   ADMUX = ADMUX = VREF_Quelle;         // configure mux input und Ÿbergebenen Kanal waehlen
    
    
-   
-   
-   //ADMUX |= (1<<REFS1) | (1<<REFS0); // interne Referenzspannung nutzen
-  // ADMUX |= (1<<REFS0); // VCC als Referenzspannung nutzen
    
    /* nach Aktivieren des ADC wird ein "Dummy-Readout" empfohlen, man liest
     also einen Wert und verwirft diesen, um den ADC "warmlaufen zu lassen" */
@@ -67,22 +65,21 @@ uint16_t readKanal(uint8_t derKanal) //Unsere Funktion zum ADC-Channel aus lesen
    uint16_t result = 0;         //Initialisieren wichtig, da lokale Variablen
    //nicht automatisch initialisiert werden und
    //zufŠllige Werte haben. Sonst kann Quatsch rauskommen
-   ADMUX |= derKanal;
+   ADMUX = VREF_Quelle | (derKanal & 0x1F);
    // Eigentliche Messung - Mittelwert aus 4 aufeinanderfolgenden Wandlungen
-   for(i=0;i<2;i++)
+   for(i=0;i<4;i++)
    {
-      ADCSRA |= (1<<ADIF);
       ADCSRA |= (1<<ADSC);            // eine Wandlung
-      while ( ADCSRA & (1<<ADSC) ) {
+      while ( ADCSRA & (1<<ADSC) )
+      {
          ;     // auf Abschluss der Wandlung warten
       }
-      //result += ADCW;            // Wandlungsergebnisse aufaddieren
-   result += ADCL;
+      result += ADCW;            // Wandlungsergebnisse aufaddieren
    }
    //  ADCSRA &= ~(1<<ADEN);             // ADC deaktivieren ("Enable-Bit" auf LOW setzen)
    
-   result /= 2;                     // Summe durch vier teilen = arithm. Mittelwert
-      
+   result /= 4;                     // Summe durch vier teilen = arithm. Mittelwert
+   
    return result;
 }
 
