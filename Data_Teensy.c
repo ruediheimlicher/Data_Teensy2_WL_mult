@@ -176,6 +176,8 @@ static volatile uint8_t             masterstatus = 0;
 
 static volatile uint8_t             tastaturstatus = 0;
 
+static volatile uint8_t             wl_callback_status = 0;
+
 volatile uint8_t status=0;
 
 
@@ -320,9 +322,9 @@ volatile uint8_t                 blinkcounter=0;
 uint8_t                          ServoimpulsSchrittweite=10;
 uint16_t                         Servoposition[]={1000,1250,1500,1750,2000,1750,1500,1250};
 
-volatile uint16_t Tastenwert=0;
-volatile uint16_t Trimmtastenwert=0;
-volatile uint8_t adcswitch=0;
+volatile uint16_t                Tastenwert=0;
+volatile uint16_t                Trimmtastenwert=0;
+volatile uint8_t                 adcswitch=0;
 
 
 /*
@@ -1607,11 +1609,15 @@ int main (void)
          //      sendbuffer[DEVICE + DATA_START_BYTE] = wl_data[DEVICE]& 0x0F; // Wer sendet Daten? Sollte Devicenummer sein
                // task je nach channelnummer
                sendbuffer[DEVICE + DATA_START_BYTE] = 0;
+               
+               int devicenummer = wl_data[DEVICE]& 0x0F;
+               
 
                switch(loop_channelnummer)
                {
                   case 0: // TEMPERATUR
                   {
+                     wl_callback_status |= (1<<devicenummer);
                      sendbuffer[BATT  + DATA_START_BYTE]= wl_data[BATT]; // Batteriespannung des device
                      
                      sendbuffer[DEVICE + DATA_START_BYTE] = wl_data[DEVICE]& 0x0F; // Wer sendet Daten? Sollte Devicenummer sein
@@ -1653,6 +1659,8 @@ int main (void)
                      
                   case 1: // ADC12BIT
                   {
+                     wl_callback_status |= (1<<devicenummer);
+                     
                      sendbuffer[BATT  + DATA_START_BYTE]= wl_data[BATT]; // Batteriespannung des device
 
                      sendbuffer[DEVICE + DATA_START_BYTE] = wl_data[DEVICE]& 0x0F; // Wer sendet Daten? Sollte Devicenummer sein
@@ -1941,6 +1949,7 @@ int main (void)
 
       if (hoststatus & (1<<MESSUNG_OK)) // Intervall abgelaufen. In ISR gesetzt, Messungen vornehmen
       {
+         
          //lcd_gotoxy(6,2);
          //lcd_puts("        ");
 
@@ -1959,6 +1968,13 @@ int main (void)
             hoststatus &= ~(1<< TEENSYPRESENT);
          }
          hoststatus &= ~(1<<MESSUNG_OK);
+         
+         lcd_gotoxy(10,2);
+         lcd_putint(wl_callback_status);
+         sendbuffer[2] = wl_callback_status;
+         wl_callback_status = 0; // in allback wird fuer jedes devixe ein bit geesetzt
+
+         
          // ADC
          /*
           spiADC_init();
@@ -2016,7 +2032,6 @@ int main (void)
          
          sendbuffer[0]= MESSUNG_DATA;
          
-         sendbuffer[2] = 27;
          
          
          sendbuffer[15] = 31; // Grenze zu DATA markieren
@@ -2039,7 +2054,6 @@ int main (void)
          
          if (usbstatus1 & (1<<SAVE_SD_RUN_BIT)) // Daten in mmcbuffer speichern, immer 2 bytes
          {
-            //sendbuffer[2] = 23;
             //lcd_gotoxy(0,1);
             //lcd_putint12(saveSDposition); // 0 .. 255, pos im mmcbuffer, immer 2 byte pro messung
             
@@ -2106,7 +2120,6 @@ int main (void)
                saveSDposition = 0;
                sendbuffer[BLOCKOFFSETLO_BYTE] = blockcounter & 0x00FF; // Nummer des geschriebenen Blocks lo
                sendbuffer[BLOCKOFFSETHI_BYTE] = (blockcounter & 0xFF00)>>8; // Nummer des geschriebenen Blocks hi
-               sendbuffer[2] = 37;
                blockcounter++;
             }
          }
@@ -2231,8 +2244,6 @@ int main (void)
          delay_ms(3);
          wl_module_get_one_byte(FLUSH_RX);
          
-         
-         
          delay_ms(3);
          
          OSZIA_LO;
@@ -2283,14 +2294,15 @@ int main (void)
          lcd_gotoxy(12,2);
          lcd_putc('c'); // senden markieren, wird in WL_ISR_RECV-Routine mit r ueberschrieben
          lcd_puthex(module_channel[loop_channelnummer]);
-*/
+          */
+         
+         
          //wl_module_config_register(STATUS, (1<<TX_DS)); // ohne wirkung
          
          // neu: red auf 2ms bei neuem Print
          delay_ms(5); // etwas warten, wichtig, sonst wird rt nicht immer erkannt
          //delay_ms(20);
          //OSZIA_HI;
-         
          
          wl_status = wl_module_get_status();
          
@@ -2422,7 +2434,10 @@ int main (void)
          uint8_t i=0;
          
          
-         //lcd_putint(temperatur0);
+         
+         lcd_putint(temperatur0);
+         
+         
          //lcd_putc(' ');
  //        lcd_puthex(wl_data[12]);
   //       lcd_puthex(wl_data[13]);
@@ -2436,7 +2451,7 @@ int main (void)
          //lcd_putint999(temperatur1);
          //lcd_putc(' ');
          
-         lcd_gotoxy(3,2);
+         
          /*
          lcd_putint999(adc0);
          lcd_putc(' ');
@@ -2448,7 +2463,7 @@ int main (void)
          lcd_putc(' ');
          //lcd_putint999(ADC_Array[2]);
          */
-         
+         lcd_gotoxy(3,3);
          for (i=0;i<4;i++)
          {
             lcd_putint999(ADC_Array[i]);
@@ -2947,7 +2962,6 @@ int main (void)
                lcd_gotoxy(8,1);
                lcd_puts("start ");
                sendbuffer[1] = usbstatus1;
-               sendbuffer[2] = 17;
                sendbuffer[5] = 18;//recvbuffer[STARTMINUTELO_BYTE];;
                sendbuffer[6] = 19;//recvbuffer[STARTMINUTEHI_BYTE];;
                sendbuffer[15] = 21;
