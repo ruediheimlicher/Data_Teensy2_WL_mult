@@ -177,6 +177,8 @@ static volatile uint8_t             masterstatus = 0;
 static volatile uint8_t             tastaturstatus = 0;
 
 static volatile uint8_t             wl_callback_status = 0;
+static volatile uint8_t             wl_callback_status_check = 0;
+
 
 volatile uint8_t status=0;
 
@@ -834,7 +836,8 @@ void timer0 (void) // Grundtakt fuer Stoppuhren usw.
    //TCCR0B = 0b101;
    TIMSK0 |= (1<<OCIE0A);
    // lcd_putc('9');
-   
+   hoststatus |= (1<<MESSUNG_OK); // Messung ausloesen
+
 }
 
 
@@ -1555,6 +1558,7 @@ int main (void)
             
          }
          else
+         
          {
             
             if (wl_status & (1<<TX_FULL))
@@ -1611,7 +1615,7 @@ int main (void)
                sendbuffer[DEVICE + DATA_START_BYTE] = 0;
                
                int devicenummer = wl_data[DEVICE]& 0x0F;
-               
+               int codenummer = wl_data[DEVICE]& 0xF0;
 
                switch(loop_channelnummer)
                {
@@ -1620,8 +1624,16 @@ int main (void)
                      wl_callback_status |= (1<<devicenummer);
                      sendbuffer[BATT  + DATA_START_BYTE]= wl_data[BATT]; // Batteriespannung des device
                      
-                     sendbuffer[DEVICE + DATA_START_BYTE] = wl_data[DEVICE]& 0x0F; // Wer sendet Daten? Sollte Devicenummer sein
+                     sendbuffer[DEVICE + DATA_START_BYTE] = wl_data[DEVICE]; // Wer sendet Daten? Sollte Devicenummer sein
                      sendbuffer[CHANNEL + DATA_START_BYTE] = wl_data[CHANNEL]& 0x0F; // Wer sendet Daten? Sollte Devicenummer sein
+                     
+                     /*
+                     lcd_gotoxy(10,0);
+                     lcd_putc('c');
+                     lcd_puthex(wl_data[DEVICE]);
+                     uint8_t codenummer = (wl_data[DEVICE] & 0xF0)>>4; // code-Nummer der Datenserie
+                     lcd_puthex(codenummer);
+                     */
                      
                      temperatur0 = (wl_data[ANALOG2+1]<<8); // LM335
                      temperatur0 |= wl_data[ANALOG2];
@@ -1688,7 +1700,9 @@ int main (void)
                      sendbuffer[ANALOG0 + DATA_START_BYTE]= wl_data[ANALOG0];
                      sendbuffer[ANALOG0+1 + DATA_START_BYTE]= wl_data[ANALOG0+1];
                      uint16_t temp = (wl_data[ANALOG0+1] <<8 |  wl_data[ANALOG0]);
+                     
                      ADC_Array[0] =  temp; // (wl_data[ANALOG0+1] <<8 |  wl_data[ANALOG0]);
+                     
 
                      sendbuffer[ANALOG1 + DATA_START_BYTE]= wl_data[ANALOG1];
                      sendbuffer[ANALOG1+1 + DATA_START_BYTE]= wl_data[ANALOG1+1];
@@ -1736,8 +1750,10 @@ int main (void)
                      
                      
                }// switch loop_channelnummer
-               
-               
+               wl_callback_status_check = wl_callback_status; // behalten fuer check vom Interface
+               //lcd_gotoxy(18,1);
+               //lcd_puthex(wl_callback_status_check);
+
                
                /*
                 lcd_gotoxy(0,1);
@@ -1795,7 +1811,7 @@ int main (void)
                   }
                   
                }
-               if (hoststatus & (1<< TEENSYPRESENT))
+               if (hoststatus & (1<< TEENSYPRESENT) && hoststatus & (1<<USB_READ_OK))
                {
                   
                //   lcd_gotoxy(6+2*loop_channelnummer,2);
@@ -1805,6 +1821,7 @@ int main (void)
                   uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
                   //OSZIA_HI;
                }
+               
                wl_module_config_register(STATUS, (1<<RX_DR)); //Clear Interrupt Bit
                //delay_ms(50);
                //delay_ms(10);
@@ -2467,6 +2484,8 @@ int main (void)
          for (i=0;i<4;i++)
          {
             lcd_putint999(ADC_Array[i]);
+            
+            
             lcd_putc(' ');
          }
         
@@ -2664,6 +2683,20 @@ int main (void)
                // lcd_gotoxy(12,0);
                // lcd_putint12(OCR1A);
                
+            }break;
+               
+              // MARK: CHECK_WL
+            case CHECK_WL:
+            {
+               lcd_gotoxy(10,0);
+               lcd_puts("W");
+               //hoststatus |= (1<<MESSUNG_OK); // Messung ausloesen
+               sendbuffer[0] = CHECK_WL;
+               sendbuffer[31] = 77;
+               //lcd_putint1(wl_callback_status);
+               sendbuffer[2] = wl_callback_status_check;
+               //uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
+               //lcd_puthex(usberfolg);
             }break;
                
                // MARK: LOGGER_START
@@ -2920,11 +2953,14 @@ int main (void)
                lcd_puts("set  ");
             }break;
                
+            
+               
                
                // MARK: MESSUNG_START
             case MESSUNG_START:
             {
                cli();
+               hoststatus |= (1<<USB_READ_OK);
                messungcounter = 0;
                sendbuffer[0] = MESSUNG_START;
                lcd_clr_line(1);
@@ -2970,7 +3006,7 @@ int main (void)
                sei();
                
                // _delay_ms(1000);
-               uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
+               //uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
                
             }break;
                
@@ -2978,8 +3014,9 @@ int main (void)
             case MESSUNG_STOP:
             {
                sendbuffer[0] = MESSUNG_STOP;
+               hoststatus &= ~(1<<USB_READ_OK);
                lcd_clr_line(1);
-               lcd_gotoxy(0,1);
+               lcd_gotoxy(12,1);
                lcd_putc('h');
                lcd_putc(':');
                lcd_puthex(code); // code
@@ -2994,7 +3031,7 @@ int main (void)
                lcd_gotoxy(8,1);
                lcd_puts("m stop");
                
-               
+                uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
                
             }break;
                
@@ -3008,7 +3045,9 @@ int main (void)
          code=0;
          sei();
          
-      
+         sendbuffer[31] = 76;
+         uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
+         
       } // r>0, neue Daten
       else
       {

@@ -104,6 +104,7 @@
 #define MESSUNG_OK         6
 #define DOWNLOAD_OK        5
 
+#define USB_READ_OK        4
 
 // bits von spistatus
 
@@ -137,7 +138,6 @@
 #define  STARTMINUTELO_BYTE   5
 #define  STARTMINUTEHI_BYTE   6
 
-//#define DATENBREITE_BYTE         7
 
 #define PACKETCOUNT_BYTE         8
 
@@ -149,6 +149,8 @@
 #define DATACOUNT_LO       12 // Nummer der Messung, fortlaufend
 #define DATACOUNT_HI       13
 
+#define TAKT_LO_BYTE       14
+#define TAKT_HI_BYTE       15
 
 
 // USB Ausgang
@@ -159,8 +161,6 @@
 // Temperatur
 
 
-#define TAKT_LO_BYTE       14
-#define TAKT_HI_BYTE       15
 
 #define DATA_START_BYTE   16    // erstes byte fuer Data auf USB
 
@@ -195,6 +195,7 @@
 // default
 #define DEFAULT            0xFE
 
+#define  CHECK_WL          0xBA
 // logger
 #define LOGGER_START       0xA0
 #define LOGGER_CONT        0xA1
