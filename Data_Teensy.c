@@ -241,6 +241,8 @@ volatile uint8_t  eeprom_indata=0;
 #pragma mark WL def
 //Variablen WL
 // MARK: WL Defs
+
+#define WL_MAX_DEVICE   6
 volatile uint8_t wl_status=0;
 
 volatile uint8_t wl_recv_status=0;
@@ -279,10 +281,14 @@ volatile uint8_t wl_sendcounter=0;
 volatile uint16_t temperatur0=0;
 volatile uint16_t temperatur1=0;
 
+volatile uint8_t devicetemperatur[WL_MAX_DEVICE] = {0};
+
 
 volatile uint16_t spannung0=0;
 
 volatile uint8_t batteriespannung=0;
+
+volatile uint8_t devicebatteriespannung[WL_MAX_DEVICE] = {0};
 
 
 #pragma mark mmc def
@@ -1613,6 +1619,7 @@ int main (void)
                
                batteriespannung = (wl_data[BATT]);
                
+               
          //      sendbuffer[DEVICE + DATA_START_BYTE] = wl_data[DEVICE]& 0x0F; // Wer sendet Daten? Sollte Devicenummer sein
                // task je nach channelnummer
                sendbuffer[DEVICE + DATA_START_BYTE] = 0;
@@ -1620,6 +1627,8 @@ int main (void)
                int devicenummer = wl_data[DEVICE]& 0x0F;
                int codenummer = wl_data[DEVICE]& 0xF0;
 
+               devicebatteriespannung[devicenummer] = batteriespannung;
+               
                switch(loop_channelnummer)
                {
                   case 0: // TEMPERATUR
@@ -1641,6 +1650,7 @@ int main (void)
                      
                      temperatur0 = (wl_data[ANALOG2+1]<<8); // LM335
                      temperatur0 |= wl_data[ANALOG2];
+                     
                      //temperatur0 = temperatur1;
                      //lcd_gotoxy(16,2);
                      //lcd_putc('A');
@@ -1913,7 +1923,7 @@ int main (void)
          sendbuffer[2] = wl_callback_status; // bisheriger status
          
          // neuer check
-         wl_callback_status = 0; // in callback wird fuer jedes devixe ein bit geesetzt
+         wl_callback_status = 0; // in callback wird fuer jedes device ein bit geesetzt
          
          lcd_gotoxy(4,0);
          lcd_putint2(messungcounter&0x07);
@@ -2447,8 +2457,22 @@ int main (void)
                // PWM fuer Channel A
                
             }break;
+ 
+   // MARK: READ_START
+            case READ_START:
+            {
+               lcd_gotoxy(14,2);
+               lcd_puts("R");
+               sendbuffer[0] = READ_START;
+               uint8_t DEVICEDATASTART = 4;
+               uint8_t i=0;
+               for (i=0;i<WL_MAX_DEVICE;i++)
+               {
+                  sendbuffer[DEVICEDATASTART + i] = devicebatteriespannung[i];
+               }
+            }break;
                
-              // MARK: CHECK_WL
+   // MARK: CHECK_WL
             case CHECK_WL:
             {
                lcd_gotoxy(10,0);
