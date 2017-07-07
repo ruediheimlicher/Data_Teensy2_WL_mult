@@ -3,7 +3,7 @@
 
 #define OHNE_INTERFACE              0
 
-#define USB_PACKETSIZE              64
+#define USB_PACKETSIZE              32
 
 #define TEST                        0
 //Oszi
@@ -46,11 +46,11 @@
 #define INT0_PIN           PD0
 
 /*
-#define SPI_WL_PORT     PORTC
-#define SPI_WL_DDR      DDRC
-#define SPI_WL_CE       PC6
-#define SPI_WL_CSN      PC7
-*/
+ #define SPI_WL_PORT     PORTC
+ #define SPI_WL_DDR      DDRC
+ #define SPI_WL_CE       PC6
+ #define SPI_WL_CSN      PC7
+ */
 
 #define SPI_WL_PORT     PORTD
 #define SPI_WL_DDR      DDRD
@@ -113,14 +113,14 @@
 #define SPI_RUN_BIT           7
 
 /*
-#define SOFT_SPI_PORT           PORTB
-#define SOFT_SPI_DDR            DDRB
-#define SOFT_SPI_MISO           PB3
-#define SOFT_SPI_MOSI           PB2
-#define SOFT_SPI_SCLK           PB1
-#define SOFT_SPI_SS_0            PB0
-#define SOFT_SPI_SS_1            PB0
-*/
+ #define SOFT_SPI_PORT           PORTB
+ #define SOFT_SPI_DDR            DDRB
+ #define SOFT_SPI_MISO           PB3
+ #define SOFT_SPI_MOSI           PB2
+ #define SOFT_SPI_SCLK           PB1
+ #define SOFT_SPI_SS_0            PB0
+ #define SOFT_SPI_SS_1            PB0
+ */
 
 // USB buffer
 
@@ -141,7 +141,7 @@
 
 #define PACKETCOUNT_BYTE         8
 
-#define BLOCK_ANZAHL_BYTE              9 // anzajhl zu lesender Blocks
+#define BLOCK_ANZAHL_BYTE              9 // anzahl zu lesender Blocks
 #define DOWNLOADBLOCKNUMMER_BYTE      10 // aktuelle nummer des downloadblocks
 
 
@@ -154,9 +154,10 @@
 
 
 // USB Ausgang
+
 #define SERVOALO           10
 #define SERVOAHI           11
-
+#define SERVO_OUT          0xD0 // USB-code fuer Servo
 // USB Eingang
 // Temperatur
 
@@ -227,52 +228,52 @@
 #define HEADER_SIZE  16 // Header zu beginn der Loggerdaten
 
 /*
-// Teensy2 int ref/TL431
-#define TASTE1		15
-#define TASTE2		23
-#define TASTE3		34
-#define TASTE4		51
-#define TASTE5		72
-#define TASTE6		94
-#define TASTE7		120
-#define TASTE8		141
-#define TASTE9		155
-#define TASTE_L	168
-#define TASTE0		178
-#define TASTE_R	194
-*/
+ // Teensy2 int ref/TL431
+ #define TASTE1		15
+ #define TASTE2		23
+ #define TASTE3		34
+ #define TASTE4		51
+ #define TASTE5		72
+ #define TASTE6		94
+ #define TASTE7		120
+ #define TASTE8		141
+ #define TASTE9		155
+ #define TASTE_L	168
+ #define TASTE0		178
+ #define TASTE_R	194
+ */
 /*
-// Teensy2 int ref/TL431
-#define TASTE1		15
-#define TASTE2		23
-#define TASTE3		34
-#define TASTE4		51
-#define TASTE5		72
-#define TASTE6		94
-#define TASTE7		120
-#define TASTE8		141
-#define TASTE9		155
-#define TASTE_L	168
-#define TASTE0		178
-#define TASTE_R	194
-*/
+ // Teensy2 int ref/TL431
+ #define TASTE1		15
+ #define TASTE2		23
+ #define TASTE3		34
+ #define TASTE4		51
+ #define TASTE5		72
+ #define TASTE6		94
+ #define TASTE7		120
+ #define TASTE8		141
+ #define TASTE9		155
+ #define TASTE_L	168
+ #define TASTE0		178
+ #define TASTE_R	194
+ */
 // Teensy2 int Vcc Tastatur1
 /*
-#define TASTE1		16
-#define TASTE2		26
-#define TASTE3		40
-#define TASTE4		62
-#define TASTE5		88
-#define TASTE6		114
-#define TASTE7		146
-#define TASTE8		177
-#define TASTE9		222
-
-
-#define TASTE_L	168
-#define TASTE0		178
-#define TASTE_R	194
-*/
+ #define TASTE1		16
+ #define TASTE2		26
+ #define TASTE3		40
+ #define TASTE4		62
+ #define TASTE5		88
+ #define TASTE6		114
+ #define TASTE7		146
+ #define TASTE8		177
+ #define TASTE9		222
+ 
+ 
+ #define TASTE_L	168
+ #define TASTE0		178
+ #define TASTE_R	194
+ */
 
 
 
