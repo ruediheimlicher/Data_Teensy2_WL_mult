@@ -1933,6 +1933,7 @@ int main (void)
          
          
          
+         
          //zaehler laden
          sendbuffer[DATACOUNT_LO] = (messungcounter & 0x00FF);
          sendbuffer[DATACOUNT_HI] = ((messungcounter & 0xFF00)>>8);
