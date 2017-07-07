@@ -3,7 +3,7 @@
 
 #define OHNE_INTERFACE              0
 
-#define USB_PACKETSIZE              64
+#define USB_PACKETSIZE              32
 
 #define TEST                        0
 //Oszi
@@ -141,7 +141,7 @@
 
 #define PACKETCOUNT_BYTE         8
 
-#define BLOCK_ANZAHL_BYTE              9 // anzajhl zu lesender Blocks
+#define BLOCK_ANZAHL_BYTE              9 // anzahl zu lesender Blocks
 #define DOWNLOADBLOCKNUMMER_BYTE      10 // aktuelle nummer des downloadblocks
 
 
@@ -154,9 +154,10 @@
 
 
 // USB Ausgang
+
 #define SERVOALO           10
 #define SERVOAHI           11
-
+#define SERVO_OUT          0xD0 // USB-code fuer Servo
 // USB Eingang
 // Temperatur
 
