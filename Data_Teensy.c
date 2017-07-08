@@ -1635,6 +1635,10 @@ int main (void)
                   {
                      devicecount++;
                      wl_callback_status |= (1<<devicenummer);
+                     lcd_gotoxy(8,2);
+                     lcd_putc('c');
+                     lcd_putint1(wl_data[DEVICE]);
+
                      sendbuffer[BATT  + DATA_START_BYTE]= wl_data[BATT]; // Batteriespannung des device
                      
                      sendbuffer[DEVICE + DATA_START_BYTE] = wl_data[DEVICE]& 0x0F; // Wer sendet Daten? Sollte Devicenummer sein
@@ -1917,9 +1921,11 @@ int main (void)
             hoststatus &= ~(1<< TEENSYPRESENT);
          }
          hoststatus &= ~(1<<MESSUNG_OK);
-         
-         lcd_gotoxy(10,2);
-         lcd_putint(wl_callback_status);
+         lcd_gotoxy(12,2);
+         lcd_putc(' ');
+         lcd_gotoxy(12,2);
+         lcd_putint1(wl_callback_status);
+         lcd_putint1(wl_callback_status_check);
          sendbuffer[2] = wl_callback_status; // bisheriger status
          
          // neuer check
@@ -1935,7 +1941,7 @@ int main (void)
          adcwert = (((uint16_t)adcfloat)&0xFFFF);
          uint8_t battint = adcwert >> 2;
          // Batteriespannung senden
-         sendbuffer[BATT] = battint;
+         sendbuffer[BATT + DATA_START_BYTE] = battint;
 
          sendbuffer[0]= MESSUNG_DATA;
           
@@ -2462,20 +2468,7 @@ int main (void)
                
             }break;
  
-   // MARK: READ_START
-            case READ_START:
-            {
-               lcd_gotoxy(14,2);
-               lcd_puts("R");
-               sendbuffer[0] = READ_START;
-               uint8_t DEVICEDATASTART = 4;
-               uint8_t i=0;
-               for (i=0;i<WL_MAX_DEVICE;i++)
-               {
-                  sendbuffer[DEVICEDATASTART + i] = devicebatteriespannung[i];
-               }
-            }break;
-               
+                
    // MARK: CHECK_WL
             case CHECK_WL:
             {
@@ -2793,6 +2786,7 @@ int main (void)
                lcd_gotoxy(12,1);
                lcd_puts("start ");
                sendbuffer[1] = usbstatus1;
+               //sendbuffer[2] = wl_callback_status;
                sendbuffer[5] = 18;//recvbuffer[STARTMINUTELO_BYTE];;
                sendbuffer[6] = 19;//recvbuffer[STARTMINUTEHI_BYTE];;
                sendbuffer[15] = 21;
@@ -2811,11 +2805,11 @@ int main (void)
                sendbuffer[0] = MESSUNG_STOP;
                hoststatus &= ~(1<<USB_READ_OK);
               // lcd_clr_line(1);
-               lcd_gotoxy(12,0);
-               lcd_putc('h');
-               lcd_putc(':');
-               lcd_puthex(code); // code
-               lcd_putc('*');
+               //lcd_gotoxy(12,0);
+               //lcd_putc('h');
+               //lcd_putc(':');
+               //lcd_puthex(code); // code
+               //lcd_putc('*');
                usbstatus = code;
                usbstatus1 = recvbuffer[1];
                sendbuffer[BLOCKOFFSETLO_BYTE] = blockcounter & 0x00FF;
