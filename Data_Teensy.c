@@ -2497,8 +2497,14 @@ int main (void)
                lcd_putint1(wl_callback_status);
                sendbuffer[2] = wl_callback_status_check;
                sendbuffer[3] = devicecount;
-               //uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
-               //lcd_puthex(usberfolg);
+ 
+               uint8_t ind=0;
+               for (ind = 0;ind  < WL_MAX_DEVICE;ind++)
+               {
+                  sendbuffer[DATA_START_BYTE + ind] = devicebatteriespannung[ind];
+                  //             uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
+               }
+
             }break;
                
                // MARK: LOGGER_START
