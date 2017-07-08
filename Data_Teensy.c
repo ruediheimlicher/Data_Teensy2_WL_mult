@@ -2467,6 +2467,23 @@ int main (void)
                // PWM fuer Channel A
                
             }break;
+// MARK: READ_START               
+            case READ_START:
+            {
+               lcd_gotoxy(16,2);
+               lcd_putc('R');
+               sendbuffer[0] = READ_START;
+               sendbuffer[30] = 73;
+               lcd_putint1(wl_callback_status);
+               sendbuffer[2] = wl_callback_status_check;
+               sendbuffer[3] = devicecount;
+               uint8_t ind=0;
+               for (ind = 0;ind  < WL_MAX_DEVICE;ind++)
+               {
+                  sendbuffer[DATA_START_BYTE + ind] = devicebatteriespannung[ind];
+  //             uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
+               }
+            }break;
  
                 
    // MARK: CHECK_WL
@@ -2568,7 +2585,7 @@ int main (void)
                sendbuffer[19] = blockanzahl;
                sendbuffer[20] = 59;
                
-               uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
+  //             uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
                //lcd_gotoxy(18,1);
                //lcd_puthex(usberfolg);
                
@@ -2623,7 +2640,7 @@ int main (void)
                
                sendbuffer[PACKETCOUNT_BYTE] = ++packetcount; //
                
-               uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
+ //              uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
                
                //lcd_gotoxy(18,2);
                //lcd_puthex(usberfolg);
@@ -2663,7 +2680,7 @@ int main (void)
                   lcd_gotoxy(19,1);
                   lcd_putc('-');
                }
-               uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
+   //            uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
                
                //lcd_gotoxy(18,2);
                //lcd_puthex(usberfolg);
@@ -2820,7 +2837,7 @@ int main (void)
                lcd_gotoxy(12,1);
                lcd_puts("m stop");
                
-               uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
+               //uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
                
             }break;
                
