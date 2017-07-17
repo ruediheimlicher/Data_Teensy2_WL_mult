@@ -106,6 +106,8 @@
 
 #define USB_READ_OK        4
 
+#define ADC_OK             3
+
 // bits von spistatus
 
 #define WRITE_SPANNUNG        1
@@ -195,6 +197,8 @@
 
 // default
 #define DEFAULT            0xFE
+
+#define TEENSY_DATA        0xFC
 
 #define  CHECK_WL          0xBA
 // logger
