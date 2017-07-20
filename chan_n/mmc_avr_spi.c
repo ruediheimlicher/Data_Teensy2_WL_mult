@@ -454,6 +454,16 @@ DRESULT mmc_disk_write (
 	UINT count			/* Sector count (1..128) */
 )
 {
+   /* 
+    Results of Disk Functions. def in diskio.h
+   typedef enum {
+      RES_OK = 0,		 0: Successful 
+      RES_ERROR,		 1: R/W Error 
+      RES_WRPRT,		 2: Write Protected 
+      RES_NOTRDY,		 3: Not Ready 
+      RES_PARERR		 4: Invalid Parameter 
+   } DRESULT;
+    */
 	if (!count) return RES_PARERR;
 	if (Stat & STA_NOINIT) return RES_NOTRDY;
 	if (Stat & STA_PROTECT) return RES_WRPRT;

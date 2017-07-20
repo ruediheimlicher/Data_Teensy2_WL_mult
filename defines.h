@@ -133,6 +133,7 @@
 
 
 // Bytes fuer Sicherungsort der Daten auf SD
+
 #define ABSCHNITT_BYTE     2
 #define BLOCKOFFSETLO_BYTE      3
 #define BLOCKOFFSETHI_BYTE      4
@@ -226,11 +227,11 @@
 #define TRANSFERBLOCK      0xA0  //Array fuer Transfer an Interface. Byte 1: Abschnitt Byte 2,3: Blockoffset Byte 4,5: Anzahl Blocks
 #define TASK_OFFSET        0x2000 // Ort fuer Einstellungen
 
-#define PACKET_SIZE        0x30 // 48 bytes fuer USB-Transfer
-//#define PACKET_SIZE     0x18 // 24 bytes fuer USB-Transfer
+//#define PACKET_SIZE        0x30 // 48 bytes fuer USB-Transfer
+#define PACKET_SIZE     0x18 // 24 bytes fuer USB-Transfer
 
 
-#define HEADER_SIZE  16 // Header zu beginn der Loggerdaten
+#define HEADER_SIZE  8 // Header zu beginn der Loggerdaten
 
 /*
  // Teensy2 int ref/TL431
