@@ -1655,6 +1655,7 @@ int main (void)
                      
                      
                      
+                     
                      /*
                       sendbuffer[ADC0LO]= wl_data[10];
                       sendbuffer[ADC0HI]= wl_data[11];
@@ -1718,6 +1719,9 @@ int main (void)
                      spannung0 = (wl_data[BATT]);
                      
                      sendbuffer[BATT + DATA_START_BYTE] = wl_data[BATT];
+                     
+                     
+                     
                   }break;
                      
                   case 3:
@@ -1765,7 +1769,7 @@ int main (void)
                if (hoststatus & (1<< TEENSYPRESENT) && hoststatus & (1<<USB_READ_OK)) // teensy da und Messreihe im Gang
                {
                   //OSZIA_LO;
-                  sendbuffer[31] = 79;
+                  sendbuffer[USB_PACKETSIZE-1] = 79;
  //                 sendbuffer[0] = MESSUNG_DATA;
                   uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
                   //OSZIA_HI;
@@ -1949,7 +1953,7 @@ int main (void)
 
          sendbuffer[0]= MESSUNG_DATA;
           
-         sendbuffer[15] = 31; // Grenze zu DATA markieren
+         sendbuffer[DATA_START_BYTE] = 31; // Grenze zu DATA markieren
          
          
          //zaehler laden
@@ -1966,9 +1970,22 @@ int main (void)
           #define SAVE_SD_STOP_BIT        2
           */
          
+         /* 
+          Results of Disk Functions. def in diskio.h
+          typedef enum {
+          RES_OK = 0,         0: Successful 
+          RES_ERROR,          1: R/W Error 
+          RES_WRPRT,          2: Write Protected 
+          RES_NOTRDY,         3: Not Ready 
+          RES_PARERR          4: Invalid Parameter 
+          } DRESULT;
+          */
+
+#pragma mark MMC Save
+         
          if (usbstatus1 & (1<<SAVE_SD_RUN_BIT)) // Daten in mmcbuffer speichern, immer 2 bytes
          {
-            lcd_gotoxy(6,2);
+            lcd_gotoxy(10,3);
             lcd_putint(saveSDposition); // 0 .. 255, pos im mmcbuffer, immer 2 byte pro messung
             
             mmcbuffer[2*saveSDposition] = (adcwert & 0x00FF);
@@ -1985,33 +2002,23 @@ int main (void)
                mmcbuffer[2*saveSDposition + 4 + 2*pos+1] = pos+1;
             }
             // Kontrolle
-            /*
-            lcd_gotoxy(10,3);
-            for (uint8_t pos = 0;pos<6;pos++) // buffer leeren ab 4
-            {
-               //lcd_puthex(mmcbuffer[2*saveSDposition + 4 + 2*pos] = 0;
-               lcd_puthex(mmcbuffer[2*saveSDposition + 4 + 2*pos+1]);
-            }
-             */
             
-            saveSDposition += 8; // 8 daten, 16 bit
-            mmcwritecounter += 16; // Zaehlung write-Prozesse, immer 2 bytes pro messung
+//            lcd_gotoxy(10,3);
+//            for (uint8_t pos = 0;pos<6;pos++) // buffer leeren ab 4
+//            {
+//               //lcd_puthex(mmcbuffer[2*saveSDposition + 4 + 2*pos] = 0;
+//               lcd_puthex(mmcbuffer[2*saveSDposition + 4 + 2*pos+1]);
+//            }
+             
+            
+            saveSDposition += 24; // 8 daten, 16 bit
+            mmcwritecounter += 48; // Zaehlung write-Prozesse, immer 2 bytes pro messung
             
             
             if ((saveSDposition ) >= 0xF0) // Block voll, 2*255 Bytes = 512
             {
                writeerr = mmc_disk_write ((void*)mmcbuffer,1 + blockcounter,1); // Block 1 ist system
                // OSZIA_HI;
-               /* 
-                Results of Disk Functions. def in diskio.h
-                typedef enum {
-                RES_OK = 0,		 0: Successful 
-                RES_ERROR,		 1: R/W Error 
-                RES_WRPRT,		 2: Write Protected 
-                RES_NOTRDY,		 3: Not Ready 
-                RES_PARERR		 4: Invalid Parameter 
-                } DRESULT;
-                */
 
                lcd_gotoxy(8,2);
                lcd_puts("save ");
@@ -2820,7 +2827,7 @@ int main (void)
                abschnittnummer = recvbuffer[ABSCHNITT_BYTE]; // Abschnitt,
                
                blockcounter = recvbuffer[BLOCKOFFSETLO_BYTE] | (recvbuffer[BLOCKOFFSETHI_BYTE]<<8);
-               startminute  = recvbuffer[STARTMINUTELO_BYTE] | (recvbuffer[STARTMINUTEHI_BYTE]<<8);
+               startminute  = recvbuffer[STARTMINUTELO_BYTE] | (recvbuffer[STARTMINUTEHI_BYTE]<<8); // in SD-Header einsetzen
                /*
                lcd_putc(' ');
                lcd_puthex(blockcounter);
@@ -2834,9 +2841,9 @@ int main (void)
                lcd_puts("start ");
                sendbuffer[1] = usbstatus1;
                //sendbuffer[2] = wl_callback_status;
-               sendbuffer[5] = 18;//recvbuffer[STARTMINUTELO_BYTE];;
-               sendbuffer[6] = 19;//recvbuffer[STARTMINUTEHI_BYTE];;
-               sendbuffer[15] = 21;
+//               sendbuffer[5] = 18;//recvbuffer[STARTMINUTELO_BYTE];;
+//               sendbuffer[6] = 19;//recvbuffer[STARTMINUTEHI_BYTE];;
+               sendbuffer[7] = 21;
                
                saveSDposition = 0; // erste Messung sind header
                sei();
@@ -2889,7 +2896,7 @@ int main (void)
          code=0;
          sei();
          //sendbuffer[3] = devicecount;
-         sendbuffer[31] = 76;
+         sendbuffer[USB_PACKETSIZE-1] = 76;
          if (sendbuffer[0]) // nur senden, wenn code gesetzt ist. Bsp SERVO_OUT: kein code
          {
             uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);

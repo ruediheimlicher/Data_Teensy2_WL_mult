@@ -275,7 +275,8 @@ int xmit_datablock (
 /*-----------------------------------------------------------------------*/
 
 static
-BYTE send_cmd (		/* Returns R1 resp (bit7==1:Send failed) */
+BYTE send_cmd 
+(		/* Returns R1 resp (bit7==1:Send failed) */
 	BYTE cmd,		/* Command index */
 	DWORD arg		/* Argument */
 )

@@ -149,9 +149,10 @@
 
 
 
-#define DATACOUNT_LO       12 // Nummer der Messung, fortlaufend
-#define DATACOUNT_HI       13
+#define DATACOUNT_LO       5 // Nummer der Messung, fortlaufend
+#define DATACOUNT_HI       6
 
+// Bei Messung_Start mitgeben
 #define TAKT_LO_BYTE       14
 #define TAKT_HI_BYTE       15
 
@@ -166,7 +167,7 @@
 
 
 
-#define DATA_START_BYTE   16    // erstes byte fuer Data auf USB
+#define DATA_START_BYTE   8    // erstes byte fuer Data auf USB
 
 
 // Ports neu
