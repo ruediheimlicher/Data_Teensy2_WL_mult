@@ -1689,45 +1689,59 @@ int main (void)
                         else                       
                         {
                         uint8_t delta=0;
-                        mmcbuffer[2*saveSDposition+delta++] = devicenummer;
-                        mmcbuffer[2*saveSDposition+delta++] = (messungcounter & 0x00FF);
-                        mmcbuffer[2*saveSDposition+delta++] = ((messungcounter & 0xFF00)>>8);
-                        mmcbuffer[2*saveSDposition+delta++] = wl_data[DEVICE];
                         
-                        mmcbuffer[2*saveSDposition+delta++] = 77;
-                        mmcbuffer[2*saveSDposition+delta++] = 77;
+                        mmcbuffer[saveSDposition+delta++] = devicenummer;
+                        mmcbuffer[saveSDposition+delta++] = wl_data[DEVICE];
+                        mmcbuffer[saveSDposition+delta++] = (messungcounter & 0x00FF);
+                        mmcbuffer[saveSDposition+delta++] = ((messungcounter & 0xFF00)>>8);
+                        //messungcounter++; 
+                        
+                        
+                        mmcbuffer[saveSDposition+delta++] = loggertestwert++;
+                        mmcbuffer[saveSDposition+delta++] = 0;
 
                         // code messung
                         // kanal_status
-                        mmcbuffer[2*saveSDposition+delta++] = wl_data[ANALOG0];
-                        mmcbuffer[2*saveSDposition+delta++] = wl_data[ANALOG0+1];
-                        mmcbuffer[2*saveSDposition+delta++] = wl_data[ANALOG1]; // KTY
-                        mmcbuffer[2*saveSDposition+delta++] = wl_data[ANALOG1+1];
-                        mmcbuffer[2*saveSDposition+delta++] = wl_data[ANALOG2]; // KTY
-                        mmcbuffer[2*saveSDposition+delta++] = wl_data[ANALOG2+1];
+                        mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG0];
+                        mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG0+1];
+                        mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG1]; // KTY
+                        mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG1+1];
+                        mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG2]; // KTY
+                        mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG2+1];
                         
-                        mmcbuffer[2*saveSDposition+delta++] = 78;
+                        //mmcbuffer[saveSDposition+delta++] = 78;
+                        //mmcbuffer[saveSDposition+delta++] = 79;
                         uint8_t delta0 = delta;
-                        mmcbuffer[2*saveSDposition+delta++] = delta0;
-                        mmcbuffer[2*saveSDposition+delta++] = 79;
+                        mmcbuffer[saveSDposition+delta++] = delta0++;
+                        mmcbuffer[saveSDposition+delta++] = 0;
+                           mmcbuffer[saveSDposition+delta++] = delta0++;
+                           mmcbuffer[saveSDposition+delta++] = 0;
+                           mmcbuffer[saveSDposition+delta++] = delta0++;
+                           mmcbuffer[saveSDposition+delta++] = 0;
+                           mmcbuffer[saveSDposition+delta++] = delta0++;
+                           mmcbuffer[saveSDposition+delta++] = 0;
+                           mmcbuffer[saveSDposition+delta++] = delta0++;
+                           mmcbuffer[saveSDposition+delta++] = 0;
+
+                        
                         }
                          // Kontrolle
                         
                         //            lcd_gotoxy(10,3);
                         //            for (uint8_t pos = 0;pos<6;pos++) // buffer leeren ab 4
                         //            {
-                        //               //lcd_puthex(mmcbuffer[2*saveSDposition + 4 + 2*pos] = 0;
-                        //               lcd_puthex(mmcbuffer[2*saveSDposition + 4 + 2*pos+1]);
+                        //               //lcd_puthex(mmcbuffer[saveSDposition + 4 + 2*pos] = 0;
+                        //               lcd_puthex(mmcbuffer[saveSDposition + 4 + 2*pos+1]);
                         //            }
                         
                         
                         saveSDposition += 24; // 8 daten, 16 bit
                         
                         // Testroutine
-                        mmcwritecounter += 48; // Zaehlung write-Prozesse, immer 2 bytes pro messung
+                        mmcwritecounter += 24; // Zaehlung write-Prozesse, immer 2 bytes pro messung
                         
                         
-                        if ((saveSDposition ) >= 0xF0) // Block voll, 2*255 Bytes = 512
+                        if ((saveSDposition ) >= 0x1E0) // Block voll, 2*255 Bytes = 512
                         {
                            writeerr = mmc_disk_write ((void*)mmcbuffer,1 + blockcounter,1); // Block 1 ist system
                            // OSZIA_HI;
@@ -1741,6 +1755,7 @@ int main (void)
                            sendbuffer[BLOCKOFFSETLO_BYTE] = blockcounter & 0x00FF; // Nummer des geschriebenen Blocks lo
                            sendbuffer[BLOCKOFFSETHI_BYTE] = (blockcounter & 0xFF00)>>8; // Nummer des geschriebenen Blocks hi
                            blockcounter++;
+                           
                         }
                      }
                      else if (usbstatus1 & (1<<SAVE_SD_STOP_BIT)) // Schreiben beenden, letzten Block noch schreiben
