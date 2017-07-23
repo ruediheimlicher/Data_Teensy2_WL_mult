@@ -124,6 +124,10 @@
  #define SOFT_SPI_SS_1            PB0
  */
 
+
+// Bits von loggerstatus
+#define logpend   1
+
 // USB buffer
 
 // Bits in usbstatus1
@@ -134,17 +138,21 @@
 
 // Bytes fuer Sicherungsort der Daten auf SD
 
-#define ABSCHNITT_BYTE     2
+//#define ABSCHNITT_BYTE     2
+
+#define PACKETCOUNT_BYTE         2
 #define BLOCKOFFSETLO_BYTE      3
 #define BLOCKOFFSETHI_BYTE      4
 
+
+// Nur bei Messung_Start:
 #define  STARTMINUTELO_BYTE   5
 #define  STARTMINUTEHI_BYTE   6
 
 
-#define PACKETCOUNT_BYTE         8
 
-#define BLOCK_ANZAHL_BYTE              9 // anzahl zu lesender Blocks
+
+#define BLOCK_ANZAHL_BYTE              9 // Nur bei LOGGER_START: anzahl zu lesender Blocks
 #define DOWNLOADBLOCKNUMMER_BYTE      10 // aktuelle nummer des downloadblocks
 
 
@@ -205,6 +213,7 @@
 #define  CHECK_WL          0xBA
 // logger
 #define LOGGER_START       0xA0
+
 #define LOGGER_CONT        0xA1
 
 #define LOGGER_NEXT        0xA2
