@@ -138,7 +138,7 @@
 
 // Bytes fuer Sicherungsort der Daten auf SD
 
-//#define ABSCHNITT_BYTE     2
+
 
 #define PACKETCOUNT_BYTE         2
 #define BLOCKOFFSETLO_BYTE      3
@@ -157,8 +157,8 @@
 
 
 
-#define DATACOUNT_LO       5 // Nummer der Messung, fortlaufend
-#define DATACOUNT_HI       6
+#define DATACOUNT_LO_BYTE       5 // Nummer der Messung, fortlaufend
+#define DATACOUNT_HI_BYTE       6
 
 // Bei Messung_Start mitgeben
 #define TAKT_LO_BYTE       14
@@ -237,12 +237,11 @@
 #define TRANSFERBLOCK      0xA0  //Array fuer Transfer an Interface. Byte 1: Abschnitt Byte 2,3: Blockoffset Byte 4,5: Anzahl Blocks
 #define TASK_OFFSET        0x2000 // Ort fuer Einstellungen
 
-//#define PACKET_SIZE        0x30 // 48 bytes fuer USB-Transfer
-#define PACKET_SIZE     0x18 // 24 bytes fuer USB-Transfer
+#define PACKET_SIZE        0x18 // 24 bytes fuer USB-Transfer
 
 
-#define HEADER_SIZE  8 // Header zu beginn der Loggerdaten
-
+#define HEADER_SIZE        8 // Header zu beginn der Loggerdaten
+#define BLOCK_SIZE         0x1E0 // Datenblock, 480 Bytes
 /*
  // Teensy2 int ref/TL431
  #define TASTE1		15
