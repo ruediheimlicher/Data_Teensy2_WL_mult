@@ -138,8 +138,7 @@
 
 // Bytes fuer Sicherungsort der Daten auf SD
 
-
-
+#define PACKETCOUNT_LO_BYTE         1
 #define PACKETCOUNT_BYTE         2
 #define BLOCKOFFSETLO_BYTE      3
 #define BLOCKOFFSETHI_BYTE      4

@@ -154,6 +154,7 @@ volatile uint8_t                    packetcount = 0;
 volatile uint8_t                    blockanzahl = 0;
 
 volatile uint8_t                    downloadblocknummer = 0;
+volatile uint16_t                    downloaddatacounter = 0;
 
 // counter fuer Mess-Intervall
 volatile uint16_t                    intervallcounter=0;
@@ -1634,6 +1635,9 @@ int main (void)
                      sendbuffer[DEVICE + DATA_START_BYTE] = wl_data[DEVICE]& 0x0F; // Wer sendet Daten? Sollte Devicenummer sein
                      sendbuffer[CHANNEL + DATA_START_BYTE] = wl_data[CHANNEL]& 0x0F; // Kanal
                      
+                     sendbuffer[BLOCKOFFSETLO_BYTE] = blockcounter & 0x00FF; // Byte 3, 4
+                     sendbuffer[BLOCKOFFSETHI_BYTE] = (blockcounter & 0xFF00)>>8; // Nummer des geschriebenen Blocks hi
+
                      /*
                       lcd_gotoxy(10,0);
                       lcd_putc('c');
@@ -1673,7 +1677,7 @@ int main (void)
 //	********************************************************************* 
 #pragma mark MMC Save
 //	*********************************************************************                     
-                     if (usbstatus1 & (1<<SAVE_SD_RUN_BIT)) // Daten in mmcbuffer speichern, immer 2 bytes
+                     if (usbstatus1 & (1<<SAVE_SD_RUN_BIT)) // Daten in mmcbuffer speichern,                      
                      {
                         //lcd_gotoxy(16,3);
                         //lcd_puthex(writemmccounter);
@@ -1682,7 +1686,8 @@ int main (void)
                         
                         writemmccounter++; // TEST: weitere Messung auf MMC
                         lcd_gotoxy(7,3);
-                        lcd_putint(saveSDposition); // 0 .. 255, pos im mmcbuffer, immer 2 byte pro messung
+                        lcd_putint12(saveSDposition); // 0 .. 255, pos im mmcbuffer, immer 2 byte pro messung
+                        //lcd_putint(blockcounter);
                         if (TEST)
                         {
                            
@@ -1710,18 +1715,21 @@ int main (void)
                            
                            mmcbuffer[saveSDposition+delta++] = loggertestwert++;
                            mmcbuffer[saveSDposition+delta++] = 0;
+                           mmcbuffer[saveSDposition+delta++] = 0;
+                           mmcbuffer[saveSDposition+delta++] = 113;
                            
                            // code messung
                            // kanal_status
                            
                            // Data ab Byte HEADER_SIZE (8)
+                           
                            //delta = HEADER_SIZE;
                            
-                           mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG0];
+                           mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG0]; 
                            mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG0+1];
                            mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG1]; // KTY
                            mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG1+1];
-                           mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG2]; // KTY
+                           mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG2]; // PT1000
                            mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG2+1];
                            
                            //mmcbuffer[saveSDposition+delta++] = 78;
@@ -1739,7 +1747,7 @@ int main (void)
                            mmcbuffer[saveSDposition+delta++] = delta0++;
                            mmcbuffer[saveSDposition+delta++] = 0;
                            mmcbuffer[saveSDposition+delta++] = delta0++;
-                           mmcbuffer[saveSDposition+delta++] = 0;
+                           mmcbuffer[saveSDposition+PACKET_SIZE-1] = delta0;
                            
                            
                         }
@@ -1779,7 +1787,7 @@ int main (void)
                            
                            lcd_gotoxy(8,2);
                            lcd_puts("save ");
-                           lcd_puthex(writeerr);
+                           lcd_putint1(writeerr);
                            lcd_putc(' ');
                            lcd_puthex(blockcounter);
                            saveSDposition = 0;
@@ -1807,14 +1815,14 @@ int main (void)
                         mmcbuffer[BLOCK_SIZE + delta++] = (messungcounter & 0x00FF);   // Gesamte Anzahl Messungen
                         mmcbuffer[BLOCK_SIZE + delta++] = ((messungcounter & 0xFF00)>>8);
 
-                        
+                        mmcbuffer[DATA_START_BYTE] |= (1<<7);
                         // ** DIFF writeerr = mmc_disk_write ((void*)mmcbuffer,1 + blockcounter,1); // Block 1 ist system
                         writeerr = mmc_disk_write ((void*)mmcbuffer,1 + blockcounter,1); // Block 1 ist system
                         // OSZIA_HI;
                         
                         lcd_gotoxy(8,2);
                         lcd_puts("resc ");
-                        lcd_puthex(writeerr);
+                        lcd_putint1(writeerr);
                         lcd_putc(' ');
                         lcd_puthex(blockcounter);
                         saveSDposition = 0;
@@ -2692,6 +2700,7 @@ int main (void)
                // old
                
                startblock = recvbuffer[BLOCKOFFSETLO_BYTE] | (recvbuffer[BLOCKOFFSETHI_BYTE]<<8); // zu lesender Block auf mmc
+               
                uint8_t paketindex = 0;
                
                // old
@@ -2701,12 +2710,21 @@ int main (void)
                //               packetcount=0;
                // lcd_gotoxy(12,1);
                // lcd_puts(">mmc");
-               //lcd_gotoxy(0,3);
-               //lcd_puthex(startblock);
+               lcd_gotoxy(18,1);
+               lcd_puthex(startblock);
                
                blockanzahl = recvbuffer[BLOCK_ANZAHL_BYTE] ;// laufender Index Paket, beim Start 0
-               //lcd_gotoxy(3,3);
-               //lcd_puthex(blockanzahl);
+               
+               downloaddatacounter = recvbuffer[DATACOUNT_LO_BYTE] | (recvbuffer[DATACOUNT_HI_BYTE]<<8); // zu lesender
+               
+               lcd_gotoxy(8,2);
+               lcd_puts("Load ");
+               lcd_putint(blockanzahl);
+               lcd_putc(' ');
+               lcd_putint12(downloaddatacounter);
+
+               //lcd_gotoxy(7,3);
+               //lcd_puthex(downloaddatacounter);
                
                
                // Beim Start Block aus SD lesen
@@ -2884,10 +2902,10 @@ int main (void)
                //lcd_gotoxy(0,3);
                //lcd_puthex(startblock);
                
-               downloadblocknummer  = recvbuffer[DOWNLOADBLOCKNUMMER_BYTE] ;// nummer des next blocks
+               downloadblocknummer  = recvbuffer[DOWNLOADBLOCKNUMMER_BYTE] ;// nummer des next blocks, Byte 10
                
-               //lcd_gotoxy(6,1);
-               //lcd_puthex(downloadblocknummer);
+               lcd_gotoxy(18,1);
+               lcd_puthex(downloadblocknummer);
                
                
                // Beim Start Block aus SD lesen
@@ -3040,7 +3058,7 @@ int main (void)
                //sendbuffer[2] = wl_callback_status;
 //               sendbuffer[5] = 18;//recvbuffer[STARTMINUTELO_BYTE];;
 //               sendbuffer[6] = 19;//recvbuffer[STARTMINUTEHI_BYTE];;
-               sendbuffer[7] = 21;
+               //sendbuffer[7] = 21;
                
                sendbuffer[USB_PACKETSIZE-1] = 76;
                saveSDposition = 0; // erste Messung sind header
