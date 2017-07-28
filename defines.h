@@ -174,8 +174,9 @@
 
 
 
-#define DATA_START_BYTE   8    // erstes byte fuer Data auf USB
+#define DATA_START_BYTE    8    // erstes byte fuer Data auf USB
 
+#define HEADER_OFFSET      4     // Erstes Byte im Block nach BLOCK_SIZE: Daten, die bei LOGGER_NEXT uebergeben werden
 
 // Ports neu
 
@@ -210,6 +211,7 @@
 #define TEENSY_DATA        0xFC
 
 #define  CHECK_WL          0xBA
+
 // logger
 #define LOGGER_START       0xA0
 
@@ -233,14 +235,13 @@
 
 #pragma mark               Transfer
 
-#define TRANSFERBLOCK      0xA0  //Array fuer Transfer an Interface. Byte 1: Abschnitt Byte 2,3: Blockoffset Byte 4,5: Anzahl Blocks
-#define TASK_OFFSET        0x2000 // Ort fuer Einstellungen
 
 #define PACKET_SIZE        0x18 // 24 bytes fuer USB-Transfer
 
-
 #define HEADER_SIZE        8 // Header zu beginn der Loggerdaten
 #define BLOCK_SIZE         0x1E0 // Datenblock, 480 Bytes
+
+
 /*
  // Teensy2 int ref/TL431
  #define TASTE1		15
