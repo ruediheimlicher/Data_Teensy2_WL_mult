@@ -1680,8 +1680,9 @@ int main (void)
                      
                      
 //	********************************************************************* 
-#pragma mark MMC Save
+#pragma mark MMC Save device 1
 //	*********************************************************************                     
+/*
                      if (usbstatus1 & (1<<SAVE_SD_RUN_BIT)) // Daten in mmcbuffer speichern,                      
                      {
                         //lcd_gotoxy(16,3);
@@ -1722,11 +1723,7 @@ int main (void)
                            
                            mmcbuffer[saveSDposition+delta++] = 0;
                            mmcbuffer[saveSDposition+delta++] = 113;
-                           
-                           // code messung
-                           // kanal_status
-                           
-                           // Data ab Byte HEADER_SIZE (8)
+                             // Data ab Byte HEADER_SIZE (8)
                            
                            mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG0]; 
                            mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG0+1];
@@ -1754,6 +1751,7 @@ int main (void)
                            
                            
                         }
+                        
                          // Kontrolle
                         
                         //            lcd_gotoxy(10,3);
@@ -1764,7 +1762,7 @@ int main (void)
                         //            }
                         
                         // Testroutine
-                        mmcwritecounter += 24; // Zaehlung write-Prozesse, immer 2 bytes pro messung
+                        mmcwritecounter += 24; // Zaehlung write-Prozesse, 24 bytes pro device
 
                         // neues Paket
                         // Daten ans Ende des Blocks schreiben
@@ -1854,7 +1852,7 @@ int main (void)
                         
                         // usbstatus1 &= ~(1<<SAVE_SD_RUN_BIT);   //  Schreiben so oder so beenden
                      }
-                     
+   */                  
                      loggerstatus |= (1<<logpend); // ein mal senden
                      
                   }break;
@@ -1929,7 +1927,10 @@ int main (void)
                      
                }// switch loop_channelnummer
                
+               // start mmc
                
+               
+               // end mmc
                
                
                wl_callback_status_check = wl_callback_status; // behalten fuer check vom Interface
@@ -1978,7 +1979,182 @@ int main (void)
                }
                
                // SD laden
+               //	********************************************************************* 
+#pragma mark MMC Save device 1
+               //	*********************************************************************                     
                
+               if (usbstatus1 & (1<<SAVE_SD_RUN_BIT)) // Daten in mmcbuffer speichern,                      
+               {
+                  //lcd_gotoxy(16,3);
+                  //lcd_puthex(writemmccounter);
+                  
+                  blockdatacounter++; // weitere Messung auf aktuellem Block der MMC
+                  
+                  writemmccounter++; // TEST: weitere Messung auf MMC
+                  lcd_gotoxy(7,3);
+                  lcd_putint12(saveSDposition); // 0 .. 255, pos im mmcbuffer, immer 2 byte pro messung
+                  //lcd_putint(blockcounter);
+                  if (TEST)
+                  {
+                     
+                     for (uint8_t pos = 8;pos<32;pos++) // buffer fuellen
+                     {
+                        loggertestwert += pos;
+                        mmcbuffer[saveSDposition + pos] = loggertestwert ;
+                        if (loggertestwert > 133)
+                        {
+                           loggertestwert = 0;
+                        }
+                        
+                        // mmcbuffer[2*saveSDposition + 2*pos+1] = pos;
+                     }
+                  }
+                  else                       
+                  {
+                     uint8_t delta=0;
+                     
+                     mmcbuffer[saveSDposition+delta++] = devicenummer;
+                     mmcbuffer[saveSDposition+delta++] = wl_data[DEVICE];
+                     mmcbuffer[saveSDposition+delta++] = (messungcounter & 0x00FF);
+                     mmcbuffer[saveSDposition+delta++] = ((messungcounter & 0xFF00)>>8);
+                     
+                     mmcbuffer[saveSDposition+delta++] = kanalstatusarray[devicenummer];
+                     mmcbuffer[saveSDposition+delta++] = loggertestwert++;
+                     
+                     mmcbuffer[saveSDposition+delta++] = 0;
+                     mmcbuffer[saveSDposition+delta++] = 113;
+                     // Data ab Byte HEADER_SIZE (8)
+                     
+                     mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG0]; 
+                     mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG0+1];
+                     mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG1]; // KTY
+                     mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG1+1];
+                     mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG2]; // PT1000
+                     mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG2+1];
+                     mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG3]; // PT1000
+                     mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG3+1];
+                     
+                     //mmcbuffer[saveSDposition+delta++] = 78;
+                     //mmcbuffer[saveSDposition+delta++] = 79;
+                     
+                     // Test fuer Linearitaet
+                     
+                     uint8_t delta0 = delta;
+                     mmcbuffer[saveSDposition+delta++] = delta0++;
+                     mmcbuffer[saveSDposition+delta++] = 0;
+                     mmcbuffer[saveSDposition+delta++] = delta0++;
+                     mmcbuffer[saveSDposition+delta++] = 0;
+                     mmcbuffer[saveSDposition+delta++] = delta0++;
+                     mmcbuffer[saveSDposition+delta++] = 0;
+                     mmcbuffer[saveSDposition+delta++] = delta0++;
+                     mmcbuffer[saveSDposition+delta++] = 0;
+                     mmcbuffer[saveSDposition+delta++] = delta0++;
+                     mmcbuffer[saveSDposition+PACKET_SIZE-1] = delta0;
+                     
+                     
+                  }
+                  
+                  // Kontrolle
+                  
+                  //            lcd_gotoxy(10,3);
+                  //            for (uint8_t pos = 0;pos<6;pos++) // buffer leeren ab 4
+                  //            {
+                  //               //lcd_puthex(mmcbuffer[saveSDposition + 4 + 2*pos] = 0;
+                  //               lcd_puthex(mmcbuffer[saveSDposition + 4 + 2*pos+1]);
+                  //            }
+                  
+                  // Testroutine
+                  mmcwritecounter += 24; // Zaehlung write-Prozesse, 24 bytes pro device
+                  
+                  // neues Paket
+                  // Daten ans Ende des Blocks schreiben
+                  saveSDposition += 24; // 8 bit Admin, 16 bit Data
+                  uint8_t delta = 0;
+                  mmcbuffer[BLOCK_SIZE + delta++] = 0xFF; // Voller Block, Startblock
+                  mmcbuffer[BLOCK_SIZE + delta++] = 0xFF;
+                  mmcbuffer[BLOCK_SIZE + delta++] = blockcounter & 0x00FF; // Nummer des geschriebenen Blocks lo
+                  mmcbuffer[BLOCK_SIZE + delta++] = (blockcounter & 0xFF00)>>8; // Nummer des geschriebenen Blocks hi
+                  
+                  
+                  if ((saveSDposition ) >= BLOCK_SIZE) // Block voll, 480 Bytes 
+                  {
+                     
+                     //                          uint8_t delta = 0;
+                     // Daten am Ende des Blocks mitgeben
+                     //                          mmcbuffer[BLOCK_SIZE + delta++] = blockcounter & 0x00FF; // Nummer des geschriebenen Blocks lo
+                     //                          mmcbuffer[BLOCK_SIZE + delta++] = (blockcounter & 0xFF00)>>8; // Nummer des geschriebenen Blocks hi
+                     
+                     //                           mmcbuffer[BLOCK_SIZE + delta++] = 0xFF; // Voller Block
+                     //                           mmcbuffer[BLOCK_SIZE + delta++] = 0xFF;
+                     
+                     blockdatacounter = 0; //Zaheler resetten fuer neuen Block
+                     
+                     
+                     writeerr = mmc_disk_write ((void*)mmcbuffer,1 + blockcounter,1); // Block 1 ist system
+                     // OSZIA_HI;
+                     
+                     lcd_gotoxy(8,2);
+                     lcd_puts("save ");
+                     lcd_putint1(writeerr);
+                     lcd_putc(' ');
+                     lcd_puthex(blockcounter);
+                     saveSDposition = 0;
+                     sendbuffer[BLOCKOFFSETLO_BYTE] = blockcounter & 0x00FF; // Nummer des geschriebenen Blocks lo
+                     sendbuffer[BLOCKOFFSETHI_BYTE] = (blockcounter & 0xFF00)>>8; // Nummer des geschriebenen Blocks hi
+                     blockcounter++;
+                     
+                  }
+               }
+               else if (usbstatus1 & (1<<SAVE_SD_STOP_BIT)) // Schreiben beenden, letzten Block noch schreiben
+               {
+                  usbstatus1 &= ~(1<<SAVE_SD_STOP_BIT);
+                  usbstatus1 &= ~(1<<SAVE_SD_RUN_BIT);   // fortlaufendes Schreiben beenden
+                  
+                  // Daten sichern
+                  
+                  uint8_t delta = 0;
+                  // Daten am Ende des Blocks mitgeben (32 Bytes)
+                  mmcbuffer[BLOCK_SIZE + delta++] = blockcounter & 0x00FF;       // Nummer des zuletzt geschriebenen Blocks lo
+                  mmcbuffer[BLOCK_SIZE + delta++] = (blockcounter & 0xFF00)>>8;  // Nummer des zuletzt geschriebenen Blocks hi
+                  
+                  mmcbuffer[BLOCK_SIZE + delta++] = blockdatacounter & 0x00FF;   // Anzahl Messungen auf letztem Block der SD
+                  mmcbuffer[BLOCK_SIZE + delta++] = (blockdatacounter & 0xFF00)>>8;
+                  
+                  mmcbuffer[BLOCK_SIZE + delta++] = (messungcounter & 0x00FF);   // Gesamte Anzahl Messungen
+                  mmcbuffer[BLOCK_SIZE + delta++] = ((messungcounter & 0xFF00)>>8);
+                  
+                  mmcbuffer[BLOCK_SIZE + delta++] = (wl_callback_status_check);   // wl_callback_status
+                  
+                  mmcbuffer[BLOCK_SIZE + delta++] = 231;
+                  
+                  mmcbuffer[BLOCK_SIZE + delta++] = (intervall & 0x00FF);   // Intervall
+                  mmcbuffer[BLOCK_SIZE + delta++] = ((intervall & 0xFF00)>>8);
+                  
+                  
+                  //mmcbuffer[DATA_START_BYTE] |= (1<<7);
+                  // ** DIFF writeerr = mmc_disk_write ((void*)mmcbuffer,1 + blockcounter,1); // Block 1 ist system
+                  
+                  writeerr = mmc_disk_write ((void*)mmcbuffer,1 + blockcounter,1); // Block 1 ist system
+                  // OSZIA_HI;
+                  
+                  lcd_gotoxy(8,2);
+                  lcd_puts("resc ");
+                  lcd_putint1(writeerr);
+                  lcd_putc(' ');
+                  lcd_puthex(blockcounter);
+                  saveSDposition = 0;
+                  sendbuffer[BLOCKOFFSETLO_BYTE] = blockcounter & 0x00FF;
+                  sendbuffer[BLOCKOFFSETHI_BYTE] = (blockcounter & 0xFF00)>>8; // Nummer des geschriebenen Blocks hi
+                  
+               } //end if usbstatus1 & (1<<SAVE_SD_STOP_BIT)
+               else if (! usb_configured()) // kein USB
+               {
+                  lcd_gotoxy(6,2);
+                  lcd_puts("noUSB");
+                  
+                  // usbstatus1 &= ~(1<<SAVE_SD_RUN_BIT);   //  Schreiben so oder so beenden
+               }
+            
                // end SDladen
                
                
