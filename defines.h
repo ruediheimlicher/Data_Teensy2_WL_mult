@@ -163,6 +163,12 @@
 #define TAKT_LO_BYTE       14
 #define TAKT_HI_BYTE       15
 
+#define KANAL_BYTE       16 // aktivierte Kanaele device 0
+#define KANAL_0_BYTE       16 // aktivierte Kanaele device 0
+#define KANAL_1_BYTE       17 // aktivierte Kanaele device 1
+#define KANAL_2_BYTE       18 // aktivierte Kanaele device 2
+#define KANAL_3_BYTE       19 // aktivierte Kanaele device 3
+
 
 // USB Ausgang
 
