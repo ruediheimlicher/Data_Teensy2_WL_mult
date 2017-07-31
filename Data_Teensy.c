@@ -1638,14 +1638,12 @@ int main (void)
                      sendbuffer[DEVICE + DATA_START_BYTE] = wl_data[DEVICE]& 0x0F; // Wer sendet Daten? Sollte Devicenummer sein
                      sendbuffer[CHANNEL + DATA_START_BYTE] = wl_data[CHANNEL]& 0x0F; // Kanal
                      
-                     
-                     
                      sendbuffer[BLOCKOFFSETLO_BYTE] = blockcounter & 0x00FF; // Byte 3, 4
                      sendbuffer[BLOCKOFFSETHI_BYTE] = (blockcounter & 0xFF00)>>8; // Nummer des geschriebenen Blocks hi
 
                       
-                     temperatur0 = (wl_data[ANALOG2+1]<<8); // LM335
-                     temperatur0 |= wl_data[ANALOG2];
+               //      temperatur0 = (wl_data[ANALOG2+1]<<8); // LM335
+               //      temperatur0 |= wl_data[ANALOG2];
                      
                      //temperatur0 = temperatur1;
                      //lcd_gotoxy(16,2);
@@ -1693,8 +1691,8 @@ int main (void)
                      sendbuffer[BLOCKOFFSETLO_BYTE] = blockcounter & 0x00FF; // Byte 3, 4
                      sendbuffer[BLOCKOFFSETHI_BYTE] = (blockcounter & 0xFF00)>>8; // Nummer des geschriebenen Blocks hi
 
-                     temperatur1 = (wl_data[ANALOG2+1]<<8);
-                     temperatur1 |= wl_data[ANALOG2];
+              //       temperatur1 = (wl_data[ANALOG2+1]<<8);
+               //      temperatur1 |= wl_data[ANALOG2];
  
                      /*
                       lcd_gotoxy(0,3);
@@ -1703,7 +1701,8 @@ int main (void)
                       lcd_putc(' ');
                       lcd_putint(temperatur0);
                       */
-                                          
+                     sendbuffer[BATT + DATA_START_BYTE] = wl_data[BATT];
+                     
                      sendbuffer[ANALOG0 + DATA_START_BYTE]= wl_data[ANALOG0];
                      sendbuffer[ANALOG0+1 + DATA_START_BYTE]= wl_data[ANALOG0+1];
                      
@@ -1730,9 +1729,7 @@ int main (void)
                      ADC_Array[3] =  temp; //(wl_data[ANALOG3+1] <<8 |  wl_data[ANALOG3]);
                      
                      // Batterierspannung  device 2
-                     spannung0 = (wl_data[BATT]);
-                     
-                     sendbuffer[BATT + DATA_START_BYTE] = wl_data[BATT];
+                     //spannung0 = (wl_data[BATT]);
                      
                      sendbuffer[USB_PACKETSIZE-1] = 82;
                      
@@ -1768,8 +1765,8 @@ int main (void)
                   blockdatacounter++; // weitere Messung auf aktuellem Block der MMC
                   
                   writemmccounter++; // TEST: weitere Messung auf MMC
-                  lcd_gotoxy(7,3);
-                  lcd_putint12(saveSDposition); // 0 .. 255, pos im mmcbuffer, immer 2 byte pro messung
+                  //lcd_gotoxy(7,3);
+                  //lcd_putint12(saveSDposition); // 0 .. 255, pos im mmcbuffer, immer 2 byte pro messung
                   //lcd_putint(blockcounter);
                   if (TEST)
                   {
@@ -1954,7 +1951,7 @@ int main (void)
                
                
                //delay_ms(20);
-               delay_ms(5);
+               delay_ms(10);
                //if (loop_pipenummer == pipenummer)
                {
                   lcd_gotoxy(5+2*loop_channelnummer,1);
@@ -2074,7 +2071,6 @@ int main (void)
       {
          hoststatus &= ~(1<<ADC_OK);
          
-         
        //  lcd_gotoxy(12,2);
        //  lcd_putc('T');
          uint16_t homeadc = readKanal(1);  
@@ -2151,7 +2147,7 @@ int main (void)
          
          lcd_gotoxy(4,0);
          lcd_putint12(messungcounter);
-         lcd_putc(' ');
+         //lcd_putc(' ');
          
          adcwert = read_bat(0); // Batteriespannung
          
@@ -2220,8 +2216,8 @@ int main (void)
       if (wl_spi_status & (1<<WL_SEND_REQUEST))
       {
          wl_send_status=0;
-         lcd_gotoxy(9,1);
-         lcd_puts(" "); // senden markieren, wird in WL_ISR_RECV-Routine mit r ueberschrieben
+         //lcd_gotoxy(9,1);
+         //lcd_puts(" "); // senden markieren, wird in WL_ISR_RECV-Routine mit r ueberschrieben
          
          //lcd_gotoxy(14,3);
          //lcd_puts("   ");
@@ -2263,7 +2259,7 @@ int main (void)
          payload[10] = adcwert & 0x00FF;
          payload[11] = (adcwert & 0xFF00)>>8;
          
-         lcd_gotoxy(4+2*loop_channelnummer,1);
+         lcd_gotoxy(4+2*loop_channelnummer,1); // senden fuer jedes device zeigen
          lcd_putc('s');
          
          
@@ -2604,7 +2600,7 @@ int main (void)
          if (!(usbstatus == code))
          {
             usbstatus = code;
-            lcd_clr_line(1);
+            //lcd_clr_line(1);
             lcd_gotoxy(18,1);
             lcd_puthex(code);
          }

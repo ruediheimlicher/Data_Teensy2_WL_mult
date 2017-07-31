@@ -233,6 +233,8 @@
 #define MESSUNG_START      0xC0
 #define MESSUNG_STOP       0xC1
 
+#define KANAL_WAHL         0xC2
+
 #define READ_START         0xCA
 
 #define USB_STOP           0xAA
