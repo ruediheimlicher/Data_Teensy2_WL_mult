@@ -1733,7 +1733,7 @@ int main (void)
                      
                      sendbuffer[USB_PACKETSIZE-1] = 82;
                      
-                     
+                     loggerstatus |= (1<<logpend); // ein mal senden
                      
                   }break; // ADC12BIT
                      
@@ -1741,10 +1741,12 @@ int main (void)
                   {
                      devicecount++;
                      sendbuffer[USB_PACKETSIZE-1] = 83;
+                     loggerstatus |= (1<<logpend); // ein mal senden
                   }break;
                   case 4:
                   {
                      sendbuffer[USB_PACKETSIZE-1] = 84;
+                     loggerstatus |= (1<<logpend); // ein mal senden
                      devicecount++;
                   }break;
                      
