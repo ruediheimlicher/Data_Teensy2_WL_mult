@@ -108,6 +108,8 @@
 
 #define ADC_OK             3
 
+#define USB_STOP_REQUEST   2
+
 // bits von spistatus
 
 #define WRITE_SPANNUNG        1
@@ -138,7 +140,6 @@
 
 // Bytes fuer Sicherungsort der Daten auf SD
 
-#define PACKETCOUNT_LO_BYTE         1
 #define PACKETCOUNT_BYTE         2
 #define BLOCKOFFSETLO_BYTE      3
 #define BLOCKOFFSETHI_BYTE      4
@@ -148,7 +149,8 @@
 #define  STARTMINUTELO_BYTE   5
 #define  STARTMINUTEHI_BYTE   6
 
-
+#define DEVICECOUNT_BYTE   3
+#define USB_BATT_BYTE   7
 
 
 #define BLOCK_ANZAHL_BYTE              9 // Nur bei LOGGER_START: anzahl zu lesender Blocks
@@ -184,6 +186,7 @@
 
 #define HEADER_OFFSET      4     // Erstes Byte im Block nach BLOCK_SIZE: Daten, die bei LOGGER_NEXT uebergeben werden
 
+# define READ_ERR_BYTE  1
 // Ports neu
 
 #define DEVICE    0 // TASK & maincounter
@@ -246,7 +249,7 @@
 
 #define PACKET_SIZE        0x18 // 24 bytes fuer USB-Transfer
 
-#define HEADER_SIZE        8 // Header zu beginn der Loggerdaten
+#define HEADER_SIZE        0x08 // Header zu beginn der Loggerdaten
 #define BLOCK_SIZE         0x1E0 // Datenblock, 480 Bytes
 
 

@@ -1568,7 +1568,7 @@ int main (void)
          
          delay_ms(1);
          
-         wl_spi_status &= ~(1<<WL_ISR_RECV);
+ //        wl_spi_status &= ~(1<<WL_ISR_RECV);
          
          if (pipenummer == 7) // ungueltige pipenummer
          {
@@ -1609,11 +1609,12 @@ int main (void)
                 
                batteriespannung = (wl_data[BATT]);
                
+               sendbuffer[BATT + DATA_START_BYTE] = 0;
                
                //      sendbuffer[DEVICE + DATA_START_BYTE] = wl_data[DEVICE]& 0x0F; // Wer sendet Daten? Sollte Devicenummer sein
                // task je nach channelnummer
                sendbuffer[DEVICE + DATA_START_BYTE] = 0;
-               
+               sendbuffer[DATA_START_BYTE -1] = 117;
                int devicenummer = wl_data[DEVICE]& 0x0F;
                int codenummer = wl_data[DEVICE]& 0xF0;
 
@@ -1632,8 +1633,8 @@ int main (void)
                      //lcd_gotoxy(8,2);
                      //lcd_putc('c');
                      //lcd_putint1(wl_data[DEVICE]); // devicenummer
-
-                     sendbuffer[BATT  + DATA_START_BYTE]= wl_data[BATT]; // Batteriespannung des device BATT ist 2
+                     sendbuffer[USB_BATT_BYTE] = wl_data[BATT];
+                     //sendbuffer[BATT  + DATA_START_BYTE]= wl_data[BATT]; // Batteriespannung des device BATT ist 2
                      
                      sendbuffer[DEVICE + DATA_START_BYTE] = wl_data[DEVICE]& 0x0F; // Wer sendet Daten? Sollte Devicenummer sein
                      sendbuffer[CHANNEL + DATA_START_BYTE] = wl_data[CHANNEL]& 0x0F; // Kanal
@@ -1667,6 +1668,10 @@ int main (void)
                      sendbuffer[ANALOG2  + DATA_START_BYTE]= wl_data[ANALOG2]; // PT1000
                      sendbuffer[ANALOG2+1  + DATA_START_BYTE]= wl_data[ANALOG2+1];
                      
+                     sendbuffer[ANALOG3  + DATA_START_BYTE]= 0;//wl_data[ANALOG3]; // 
+                     sendbuffer[ANALOG3+1  + DATA_START_BYTE]= 0;//wl_data[ANALOG3+1];
+                    
+                     
                      sendbuffer[USB_PACKETSIZE-1] = 81;
                      
                      
@@ -1683,7 +1688,8 @@ int main (void)
                      devicecount++;
                      wl_callback_status |= (1<<devicenummer);
                      
-                     sendbuffer[BATT  + DATA_START_BYTE]= wl_data[BATT]; // Batteriespannung des device
+                     sendbuffer[USB_BATT_BYTE] = wl_data[BATT];
+                     //sendbuffer[BATT  + DATA_START_BYTE]= wl_data[BATT]; // Batteriespannung des device
                      
                      sendbuffer[DEVICE + DATA_START_BYTE] = wl_data[DEVICE]& 0x0F; // Wer sendet Daten? Sollte Devicenummer sein
                      sendbuffer[CHANNEL + DATA_START_BYTE] = wl_data[CHANNEL]& 0x0F; // Wer sendet Daten? Sollte Devicenummer sein
@@ -1701,7 +1707,7 @@ int main (void)
                       lcd_putc(' ');
                       lcd_putint(temperatur0);
                       */
-                     sendbuffer[BATT + DATA_START_BYTE] = wl_data[BATT];
+                     sendbuffer[USB_BATT_BYTE] = wl_data[BATT];
                      
                      sendbuffer[ANALOG0 + DATA_START_BYTE]= wl_data[ANALOG0];
                      sendbuffer[ANALOG0+1 + DATA_START_BYTE]= wl_data[ANALOG0+1];
@@ -1781,9 +1787,7 @@ int main (void)
                         {
                            loggertestwert = 0;
                         }
-                        
-                        // mmcbuffer[2*saveSDposition + 2*pos+1] = pos;
-                     }
+                      }
                   }
                   else                       
                   {
@@ -1795,19 +1799,19 @@ int main (void)
                      mmcbuffer[saveSDposition+delta++] = ((messungcounter & 0xFF00)>>8);
                      
                      mmcbuffer[saveSDposition+delta++] = kanalstatusarray[devicenummer];
-                     mmcbuffer[saveSDposition+delta++] = loggertestwert++;
+                     mmcbuffer[saveSDposition+delta++] = 0; //loggertestwert++;
                      
                      mmcbuffer[saveSDposition+delta++] = 0;
-                     mmcbuffer[saveSDposition+delta++] = 113;
+                     mmcbuffer[saveSDposition+delta++] = 113; // end code
                      // Data ab Byte HEADER_SIZE (8)
-                     
+                      // analoge Kanaele je 16bit
                      mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG0]; 
                      mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG0+1];
                      mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG1]; // KTY
                      mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG1+1];
                      mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG2]; // PT1000
                      mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG2+1];
-                     mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG3]; // PT1000
+                     mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG3]; // 
                      mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG3+1];
                      
                      //mmcbuffer[saveSDposition+delta++] = 78;
@@ -1971,7 +1975,7 @@ int main (void)
                   
                }
                
-               
+      // MARK:  USB send          
                
                // senden an DataLogger
                if (hoststatus & (1<< TEENSYPRESENT) && hoststatus & (1<<USB_READ_OK)) // teensy da und Messreihe im Gang
@@ -1980,7 +1984,7 @@ int main (void)
                   //sendbuffer[USB_PACKETSIZE-1] = 79;
  //                 sendbuffer[0] = MESSUNG_DATA;
                   uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 100);
-                  
+                  //sendbuffer[0] = 0;//
                   
                   //OSZIA_HI;
                }
@@ -2033,6 +2037,9 @@ int main (void)
          //         } // if pipenummer <7
          OSZIB_HI;
          //    wl_spi_status = 0;
+         
+        wl_spi_status &= ~(1<<WL_ISR_RECV);
+         
       } // end ISR abarbeiten (wl_spi_status & (1<<WL_ISR_RECV))
       
       
@@ -2117,7 +2124,7 @@ int main (void)
       if (hoststatus & (1<<MESSUNG_OK)) // Intervall abgelaufen. Flag wird in ISR gesetzt. Jetzt Messungen vornehmen
       {
         
-         sendbuffer[3] = devicecount; // anz devicemitgeben
+         sendbuffer[DEVICECOUNT_BYTE] = devicecount; // anz devicemitgeben
          devicecount=0;
          //lcd_gotoxy(6,2);
          //lcd_puts("        ");
@@ -2158,7 +2165,7 @@ int main (void)
          
          uint8_t battint = adcwert >> 2;
          // Batteriespannung senden
-         sendbuffer[BATT + DATA_START_BYTE] = battint;
+      //   sendbuffer[BATT + DATA_START_BYTE] = battint;
 
          sendbuffer[0]= MESSUNG_DATA;
           
@@ -2564,12 +2571,7 @@ int main (void)
          
          
          
-         // MARK:  USB send
-         // neue Daten abschicken
-         //         if ((usbtask & (1<<EEPROM_WRITE_PAGE_TASK) )) //|| usbtask & (1<<EEPROM_WRITE_BYTE_TASK))
-         
-         //   uint8_t anz = usb_rawhid_send((void*)sendbuffer, 50); // 20 us
-         
+          
          
       } // if loopcount0
       
@@ -2585,7 +2587,6 @@ int main (void)
       recvbuffer[0] = 0;
       //     if (usbstatus & (1<<READAUTO))
       {
-         
          r = usb_rawhid_recv((void*)recvbuffer, 0); // 5us
       }
 //	*********************************************************************       
@@ -2641,7 +2642,7 @@ int main (void)
                sendbuffer[30] = 73;
                lcd_putint1(wl_callback_status);
                sendbuffer[2] = wl_callback_status_check;
-               sendbuffer[3] = devicecount;
+               sendbuffer[DEVICECOUNT_BYTE] = devicecount;
                uint8_t ind=0;
                for (ind = 0;ind  < WL_MAX_DEVICE;ind++)
                {
@@ -2662,7 +2663,7 @@ int main (void)
                sendbuffer[31] = 77;
                lcd_putint1(wl_callback_status);
                sendbuffer[2] = wl_callback_status_check;
-               sendbuffer[3] = devicecount;
+               sendbuffer[DEVICECOUNT_BYTE] = devicecount;
  
                uint8_t ind=0;
                for (ind = 0;ind  < WL_MAX_DEVICE;ind++)
@@ -2711,7 +2712,7 @@ int main (void)
                uint8_t paketindex = 0;
                
                // old
-               //packetcount = recvbuffer[3] ;// laufender Index Paket, beim Start 0
+               //packetcount = recvbuffer[DEVICECOUNT_BYTE] ;// laufender Index Paket, beim Start 0
                
                packetcount = recvbuffer[PACKETCOUNT_BYTE] ;// laufender Index Paket, beim Start 0
                //               packetcount=0;
@@ -2722,14 +2723,14 @@ int main (void)
                
                blockanzahl = recvbuffer[BLOCK_ANZAHL_BYTE] ;// laufender Index Paket, beim Start 0
                
-               downloaddatacounter = recvbuffer[DATACOUNT_LO_BYTE] | (recvbuffer[DATACOUNT_HI_BYTE]<<8); // zu lesender
+               downloaddatacounter = recvbuffer[DATACOUNT_LO_BYTE] | (recvbuffer[DATACOUNT_HI_BYTE]<<8); // 
                
                lcd_gotoxy(8,2);
                lcd_puts("load ");
                lcd_putint(blockanzahl);
                lcd_putc(' ');
                lcd_putint12(downloaddatacounter);
-
+               
                //lcd_gotoxy(7,3);
                //lcd_puthex(downloaddatacounter);
                
@@ -2744,13 +2745,12 @@ int main (void)
                   lcd_puts(">OK ");
                   if (TEST == 0)
                   {
-                  sendbuffer[DATA_START_BYTE -1] = 111;
-                  sendbuffer[USB_PACKETSIZE-1] = 77;
+                     sendbuffer[DATA_START_BYTE -1] = 111;
+                     sendbuffer[USB_PACKETSIZE-1] = 77;
                   }
-                 
                   
-                  // Header uebertragen, erste HEADER_SIZE bytes im Block
-                                    
+                  // Header uebertragen, erste HEADER_SIZE bytes im Block. Nach DATA_STARTBYTE und HEADER_OFFSET
+                  
                   uint8_t headerindex=0;
                   for (headerindex = 0;headerindex < 10;headerindex++)
                   {
@@ -2763,24 +2763,17 @@ int main (void)
                   lcd_puts(">err");
                }
                
-               // old
-               //sendbuffer[3] = 0;
                sendbuffer[PACKETCOUNT_BYTE] = 0; //
                sendbuffer[1] = readerr;
-
+               
                if (TEST == 1)
                {
-               sendbuffer[16] = 57;
-               sendbuffer[17] = startblock;
-               sendbuffer[18] = 58;
-               sendbuffer[19] = blockanzahl;
-               sendbuffer[20] = 59;
-                  
+                  sendbuffer[16] = 57;
+                  sendbuffer[17] = startblock;
+                  sendbuffer[18] = 58;
+                  sendbuffer[19] = blockanzahl;
+                  sendbuffer[20] = 59;                  
                }
-   //            uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
-               //lcd_gotoxy(18,1);
-               //lcd_puthex(usberfolg);
-               
             }break;
                
 //	*********************************************************************                
@@ -2832,17 +2825,6 @@ int main (void)
                   
                   
                   usbstatus1 = recvbuffer[1];
-                  
-                  //code = LOGGER_CONT;
-                  //lcd_putc('c');
-                  // lcd_puthex(code); // code
-                  
-                  // Block lesen
-             //     lcd_puthex(recvbuffer[1]); // startblock lo
-             //     lcd_puthex(recvbuffer[2]); // startblock hi
-              //    lcd_putc(' ');
-              //    lcd_puthex(recvbuffer[PACKETCOUNT_BYTE]); // packetcount
-                  
                   packetcount = recvbuffer[PACKETCOUNT_BYTE];
                   
                   
@@ -3121,8 +3103,11 @@ int main (void)
 //	*********************************************************************                
             case MESSUNG_STOP:
             {
+               
                sendbuffer[0] = MESSUNG_STOP;
                hoststatus &= ~(1<<USB_READ_OK);
+               
+               hoststatus  |= (1<<USB_STOP_REQUEST);
               // lcd_clr_line(1);
                //lcd_gotoxy(12,0);
                //lcd_putc('h');
@@ -3142,10 +3127,10 @@ int main (void)
                
                
                sendbuffer[USB_PACKETSIZE-1] = 79;
-               lcd_gotoxy(19,1);
-               lcd_putc('+');
-               lcd_gotoxy(12,1);
-               lcd_puts("m stop");
+     //          lcd_gotoxy(19,1);
+      //         lcd_putc('+');
+      //         lcd_gotoxy(12,1);
+     //          lcd_puts("m stop");
                
                //uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
                
@@ -3168,24 +3153,24 @@ int main (void)
          
          code=0;
          sei();
-         //sendbuffer[3] = devicecount;
+         //sendbuffer[DEVICECOUNT_BYTE] = devicecount;
  
          if (sendbuffer[0]) // nur senden, wenn code gesetzt ist. Bsp SERVO_OUT: kein code
          {
             writemmcstartcounter++;
-            lcd_gotoxy(11,3);
-            lcd_puthex(loggerstatus);
+          //  lcd_gotoxy(11,3);
+          //  lcd_puthex(loggerstatus);
             if (TEST == 1)
             {
-            lcd_gotoxy(13,3);
-            lcd_puthex(writemmcstartcounter);
-            sendbuffer[21] = sendbuffer[0];
-            sendbuffer[22] = writemmcstartcounter;
-            sendbuffer[23] = loggerstatus;
+               lcd_gotoxy(13,3);
+               lcd_puthex(writemmcstartcounter);
+               sendbuffer[21] = sendbuffer[0];
+               sendbuffer[22] = writemmcstartcounter;
+               sendbuffer[23] = loggerstatus;
             }
             
             uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 100);
-            
+            sendbuffer[0] = 0;
          }
          
       } // r>0, neue Daten
