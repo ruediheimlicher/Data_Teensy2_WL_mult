@@ -179,7 +179,7 @@ volatile uint8_t                    spistatus=0x00; // was ist zu tun infolge sp
 static volatile uint8_t             potstatus=0x00; // Bit 7 gesetzt, Mittelwerte setzen
 static volatile uint8_t             impulscounter=0x00;
 
-static volatile uint8_t             masterstatus = 0;
+static volatile uint8_t             masterstatus = 0; // was ist zu tun in der loop? 
 
 static volatile uint8_t             tastaturstatus = 0;
 
@@ -1026,9 +1026,7 @@ ISR(INT0_vect) // Interrupt bei CS, falling edge
  {
  //OSZI_C_LO;
  
- masterstatus |= (1<<SUB_TASK_BIT); // Zeitfenster fuer Task offen
- adc_counter ++; // loest adc aus
- 
+  
  }
  else // HIGH to LOW pin change, Sub ON
  {
@@ -1330,7 +1328,6 @@ int main (void)
    
    
    
-   //  masterstatus |= (1<<SUB_READ_EEPROM_BIT); // sub soll EE lesen
 #pragma mark MMC init
    //lcd_gotoxy(0,0);
    //lcd_putc('a');
@@ -1940,7 +1937,6 @@ int main (void)
                
                // end SDladen
              
-               
                // end mmc
                
                
@@ -1955,7 +1951,6 @@ int main (void)
                
                wl_module_get_one_byte(FLUSH_TX);
                
-               
                //delay_ms(20);
                delay_ms(10);
                //if (loop_pipenummer == pipenummer)
@@ -1968,7 +1963,8 @@ int main (void)
                      wl_spi_status |= (1<<WL_SEND_REQUEST);
                   }
                   else
-                  {                     
+                  {  
+                     
                    //  lcd_gotoxy(18,2);
                    //  lcd_putc('e');
                   }
@@ -2073,17 +2069,17 @@ int main (void)
          }
          
          mmcstatus &= ~(1<<WRITENEXT);
-      }
+      }// test
       
 //      if ((hoststatus & (1<<ADC_OK)) && (!(hoststatus & (1<<MESSUNG_OK))) && (!(wl_spi_status & (1<<WL_SEND_REQUEST))))
       if ((hoststatus & (1<<ADC_OK)))
       {
          hoststatus &= ~(1<<ADC_OK);
          
-       //  lcd_gotoxy(12,2);
-       //  lcd_putc('T');
+         lcd_gotoxy(10,3);
+         lcd_putc('T');
          uint16_t homeadc = readKanal(1);  
-       //  lcd_putint12(homeadc);
+         lcd_putint12(homeadc);
          teensybuffer[ANALOG0  + DATA_START_BYTE]= homeadc & 0x00FF; // Kanal 1
          teensybuffer[ANALOG0+1  + DATA_START_BYTE]= (homeadc & 0xFF00)>>8;
        //  lcd_puthex(teensybuffer[ANALOG0  + DATA_START_BYTE]);
@@ -2152,7 +2148,7 @@ int main (void)
          sendbuffer[6] = wl_callback_status; // bisheriger status
          
          // neuer check
-         wl_callback_status = 0; // in callback wird fuer jedes device ein bit geesetzt
+         wl_callback_status = 0; // in der callbackfunktion  wird fuer jedes device, das antwortet, ein bit geesetzt
          
          lcd_gotoxy(4,0);
          lcd_putint12(messungcounter);
@@ -2204,6 +2200,7 @@ int main (void)
          //lcd_clr_line(3);
          
 
+         
          wl_spi_status |= (1<<WL_SEND_REQUEST); // Auftrag an wl, Daten lesen
          loop_pipenummer = 1;
          loop_channelnummer=0;
@@ -3034,7 +3031,7 @@ int main (void)
                hoststatus |= (1<<USB_READ_OK);
                messungcounter = 0;
                sendbuffer[0] = MESSUNG_START;
-               blockdatacounter = 0;            // Zaehler fuer DAta auf dem aktuellen Block
+               blockdatacounter = 0;            // Zaehler fuer Data auf dem aktuellen Block
                
                lcd_gotoxy(8,2);
                lcd_puts("     "); // Platz fuer save oder resc leeren
@@ -3048,7 +3045,7 @@ int main (void)
                 lcd_puthex(code); // code
                 */
                usbstatus = code;
-               usbstatus1 = recvbuffer[1];
+               usbstatus1 = recvbuffer[1]; 
                
                mmcwritecounter = 0; // Zaehler fuer Messungen auf MMC
                
@@ -3065,13 +3062,15 @@ int main (void)
 //               abschnittnummer = recvbuffer[ABSCHNITT_BYTE]; // Abschnitt,
                
                blockcounter = recvbuffer[BLOCKOFFSETLO_BYTE] | (recvbuffer[BLOCKOFFSETHI_BYTE]<<8);
-               startminute  = recvbuffer[STARTMINUTELO_BYTE] | (recvbuffer[STARTMINUTEHI_BYTE]<<8); // in SD-Header einsetzen
+              // startminute  = recvbuffer[STARTMINUTELO_BYTE] | (recvbuffer[STARTMINUTEHI_BYTE]<<8); // in SD-Header einsetzen
               
+               // Kanalstatus lesen. Wird beim Start der Messungen uebergeben
                uint8_t kan = 0;
                for(kan = 0;kan < 8;kan++)
                {
                   kanalstatusarray[kan] = recvbuffer[KANAL_BYTE + kan];
                }
+               
                /*
                lcd_putc(' ');
                lcd_puthex(blockcounter);
@@ -3083,7 +3082,7 @@ int main (void)
                */
                lcd_gotoxy(12,1);
                lcd_puts("start ");
-               sendbuffer[1] = usbstatus1;
+               sendbuffer[1] = usbstatus1; // rueckmeldung 
                //sendbuffer[2] = wl_callback_status;
 //               sendbuffer[5] = 18;//recvbuffer[STARTMINUTELO_BYTE];;
 //               sendbuffer[6] = 19;//recvbuffer[STARTMINUTEHI_BYTE];;

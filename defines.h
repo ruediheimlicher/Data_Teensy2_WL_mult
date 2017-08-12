@@ -103,12 +103,10 @@
 #define TEENSYPRESENT      7
 #define MESSUNG_OK         6
 #define DOWNLOAD_OK        5
-
 #define USB_READ_OK        4
-
 #define ADC_OK             3
-
 #define USB_STOP_REQUEST   2
+
 
 // bits von spistatus
 
@@ -125,6 +123,11 @@
  #define SOFT_SPI_SS_0            PB0
  #define SOFT_SPI_SS_1            PB0
  */
+
+// bits von masterstatus
+#define MESSUNG_TEENSY_OK        7 // Nur messungen auf teensy
+#define MESSUNG_WL_OK            6 // messungen der wl-devices abrufen
+#define MESSUNG_TAKT_OK          5  // messen im Intervall-Takt des timers
 
 
 // Bits von loggerstatus
@@ -146,8 +149,8 @@
 
 
 // Nur bei Messung_Start:
-#define  STARTMINUTELO_BYTE   5
-#define  STARTMINUTEHI_BYTE   6
+//#define  STARTMINUTELO_BYTE   5
+//#define  STARTMINUTEHI_BYTE   6
 
 #define DEVICECOUNT_BYTE   3
 #define USB_BATT_BYTE   7
@@ -165,11 +168,7 @@
 #define TAKT_LO_BYTE       14
 #define TAKT_HI_BYTE       15
 
-#define KANAL_BYTE       16 // aktivierte Kanaele device 0
-#define KANAL_0_BYTE       16 // aktivierte Kanaele device 0
-#define KANAL_1_BYTE       17 // aktivierte Kanaele device 1
-#define KANAL_2_BYTE       18 // aktivierte Kanaele device 2
-#define KANAL_3_BYTE       19 // aktivierte Kanaele device 3
+#define KANAL_BYTE       16 // aktivierte Kanaele pro device, Liste bis anz Kanaele. Bei Start Messung uebertragen
 
 
 // USB Ausgang
