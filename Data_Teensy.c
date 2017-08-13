@@ -1621,6 +1621,7 @@ int main (void)
                //lcd_gotoxy(6,2);
                //lcd_puts("     ");
 
+               wl_callback_status |= (1<<0);
                switch(devicenummer)
                {
                   case 1: // TEMPERATUR
@@ -1634,7 +1635,7 @@ int main (void)
                      //sendbuffer[BATT  + DATA_START_BYTE]= wl_data[BATT]; // Batteriespannung des device BATT ist 2
                      
                      sendbuffer[DEVICE + DATA_START_BYTE] = wl_data[DEVICE]& 0x0F; // Wer sendet Daten? Sollte Devicenummer sein
-                     sendbuffer[CHANNEL + DATA_START_BYTE] = wl_data[CHANNEL]& 0x0F; // Kanal
+                     //sendbuffer[CHANNEL + DATA_START_BYTE] = wl_data[CHANNEL]& 0x0F; // Kanal
                      
                      sendbuffer[BLOCKOFFSETLO_BYTE] = blockcounter & 0x00FF; // Byte 3, 4
                      sendbuffer[BLOCKOFFSETHI_BYTE] = (blockcounter & 0xFF00)>>8; // Nummer des geschriebenen Blocks hi
@@ -1689,7 +1690,7 @@ int main (void)
                      //sendbuffer[BATT  + DATA_START_BYTE]= wl_data[BATT]; // Batteriespannung des device
                      
                      sendbuffer[DEVICE + DATA_START_BYTE] = wl_data[DEVICE]& 0x0F; // Wer sendet Daten? Sollte Devicenummer sein
-                     sendbuffer[CHANNEL + DATA_START_BYTE] = wl_data[CHANNEL]& 0x0F; // Wer sendet Daten? Sollte Devicenummer sein
+                     //sendbuffer[CHANNEL + DATA_START_BYTE] = wl_data[CHANNEL]& 0x0F; // Wer sendet Daten? Sollte Devicenummer sein
 
                      sendbuffer[BLOCKOFFSETLO_BYTE] = blockcounter & 0x00FF; // Byte 3, 4
                      sendbuffer[BLOCKOFFSETHI_BYTE] = (blockcounter & 0xFF00)>>8; // Nummer des geschriebenen Blocks hi
@@ -2072,7 +2073,7 @@ int main (void)
       }// test
       
 //      if ((hoststatus & (1<<ADC_OK)) && (!(hoststatus & (1<<MESSUNG_OK))) && (!(wl_spi_status & (1<<WL_SEND_REQUEST))))
-      if ((hoststatus & (1<<ADC_OK)))
+      if (hoststatus & (1<<ADC_OK)) // in ISR gesetzt, wenn nichts anderes los ist
       {
          hoststatus &= ~(1<<ADC_OK);
          
@@ -2117,7 +2118,7 @@ int main (void)
       uint16_t adcwert=0;
       float adcfloat=0;
 
-      if (hoststatus & (1<<MESSUNG_OK)) // Intervall abgelaufen. Flag wird in ISR gesetzt. Jetzt Messungen vornehmen
+      if (hoststatus & (1<<MESSUNG_OK)) // Intervall abgelaufen. Flag wird in ISR gesetzt. Jetzt Messungen vornehmen. Auftrag an wl, Daten zu senden
       {
         
          sendbuffer[DEVICECOUNT_BYTE] = devicecount; // anz devicemitgeben
@@ -2201,12 +2202,9 @@ int main (void)
          
 
          
-         wl_spi_status |= (1<<WL_SEND_REQUEST); // Auftrag an wl, Daten lesen
+         wl_spi_status |= (1<<WL_SEND_REQUEST); // Auftrag an wl, Daten zu senden
          loop_pipenummer = 1;
          loop_channelnummer=0;
-         //         temperatur0=0;
-         // Messreihe auf wl starten
-         //loop_pipenummer=1;
          
          
       } // end if (hoststatus & (1<<MESSUNG_OK))
@@ -2896,7 +2894,7 @@ int main (void)
                
                downloadblocknummer  = recvbuffer[DOWNLOADBLOCKNUMMER_BYTE] ;// nummer des next blocks, Byte 10
                
-               lcd_gotoxy(18,1);
+               lcd_gotoxy(18,3);
                lcd_puthex(downloadblocknummer);
                
                
