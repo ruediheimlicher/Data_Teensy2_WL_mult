@@ -189,7 +189,7 @@
 // Ports neu
 
 #define DEVICE    0 // TASK & maincounter
-#define CHANNEL   1
+//#define CHANNEL   1
 #define BATT      2
 
 #define ANALOG0    3

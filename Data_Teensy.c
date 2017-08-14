@@ -1621,7 +1621,7 @@ int main (void)
                //lcd_gotoxy(6,2);
                //lcd_puts("     ");
 
-               wl_callback_status |= (1<<0);
+               //wl_callback_status |= (1<<0);
                switch(devicenummer)
                {
                   case 1: // TEMPERATUR
@@ -1923,6 +1923,8 @@ int main (void)
                   lcd_putint1(writeerr);
                   lcd_putc(' ');
                   lcd_puthex(blockcounter);
+                  lcd_putc(' ');
+                  lcd_puthex(blockdatacounter);
                   saveSDposition = 0;
                   sendbuffer[BLOCKOFFSETLO_BYTE] = blockcounter & 0x00FF;
                   sendbuffer[BLOCKOFFSETHI_BYTE] = (blockcounter & 0xFF00)>>8; // Nummer des geschriebenen Blocks hi
@@ -2098,9 +2100,10 @@ int main (void)
          teensybuffer[ANALOG3  + DATA_START_BYTE]= homeadc & 0x00FF; // Kanal 10
          teensybuffer[ANALOG3+1  + DATA_START_BYTE]= (homeadc & 0xFF00)>>8;
           
-         teensybuffer[0] = TEENSY_DATA;
+//         teensybuffer[0] = TEENSY_DATA;
          
          uint8_t usberfolg = 0;
+         /*
          usberfolg = usb_rawhid_send((void*)teensybuffer, 100);
          if ((usberfolg != 0x20))
          {
@@ -2108,7 +2111,7 @@ int main (void)
             lcd_putc('T');
             lcd_puthex(usberfolg);
          }
-          
+          */
          
       }
       
@@ -3168,7 +3171,7 @@ int main (void)
             
             uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 100);
             sendbuffer[0] = 0;
-         }
+         } // if sendbuffer[0] > 0
          
       } // r>0, neue Daten
       else
