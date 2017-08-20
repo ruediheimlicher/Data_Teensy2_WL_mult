@@ -369,11 +369,14 @@ extern void wl_module_tx_config_channel(uint8_t tx_nr,uint8_t channel)
    PTX =0;
    TX_POWERUP;
    wl_module_CE_hi;     // Listening for pakets
-   
+ 
+//   _delay_us(10);						// Grünes Modul funktioniert nicht mit 10µs delay
+//   wl_module_CE_lo;
+   //TX_POWERDOWN;
    // Start receiver 
-   PTX = 0;        // Start in receiving mode
-   RX_POWERUP;     // Power up in receiving mode
-   wl_module_CE_hi;     // Listening for pakets
+ //  PTX = 0;        // Start in receiving mode
+ //  RX_POWERUP;     // Power up in receiving mode
+ //  wl_module_CE_hi;     // Listening for pakets
    
 }
 

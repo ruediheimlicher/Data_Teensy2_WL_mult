@@ -548,8 +548,8 @@ void Master_Init(void)
     TASTENPORT |= (1<<TASTE0);	//Pull-up
     */
    
-   
-   
+   DDRF &= ~(1<<1); //ADC1
+   PORTF &= ~(1<<1);
    // ---------------------------------------------------
    // Pin Change Interrupt enable on PCINT0 (PD7)
    // ---------------------------------------------------
@@ -1621,9 +1621,33 @@ int main (void)
                //lcd_gotoxy(6,2);
                //lcd_puts("     ");
 
-               //wl_callback_status |= (1<<0);
+              wl_callback_status |= (1<<0);
                switch(devicenummer)
                {
+                     
+                  case 0:
+                  {
+                      
+                    /* 
+                     sendbuffer[USB_BATT_BYTE] = 17;
+                     sendbuffer[DEVICE + DATA_START_BYTE] = 0; // teensy
+                     sendbuffer[ANALOG0  + DATA_START_BYTE]= 0; // LM335
+                     sendbuffer[ANALOG0+1  + DATA_START_BYTE]= 0;
+                     
+                     sendbuffer[ANALOG1  + DATA_START_BYTE]= 1; // KTY
+                     sendbuffer[ANALOG1+1  + DATA_START_BYTE]= 1;
+                     
+                     sendbuffer[ANALOG2  + DATA_START_BYTE]= 2; // PT1000
+                     sendbuffer[ANALOG2+1  + DATA_START_BYTE]= 2;
+                     
+                     sendbuffer[ANALOG3  + DATA_START_BYTE]= 3;//wl_data[ANALOG3]; // 
+                     sendbuffer[ANALOG3+1  + DATA_START_BYTE]= 3;//wl_data[ANALOG3+1];
+                     
+                     */ 
+                    // sendbuffer[USB_PACKETSIZE-1] = 51;
+                           
+                  }break;
+                   
                   case 1: // TEMPERATUR
                   {
                      devicecount++;
@@ -1785,50 +1809,67 @@ int main (void)
                         {
                            loggertestwert = 0;
                         }
-                      }
+                     }
                   }
                   else                       
                   {
-                     uint8_t delta=0;
-                     
-                     mmcbuffer[saveSDposition+delta++] = devicenummer;
-                     mmcbuffer[saveSDposition+delta++] = wl_data[DEVICE];
-                     mmcbuffer[saveSDposition+delta++] = (messungcounter & 0x00FF);
-                     mmcbuffer[saveSDposition+delta++] = ((messungcounter & 0xFF00)>>8);
-                     
-                     mmcbuffer[saveSDposition+delta++] = kanalstatusarray[devicenummer];
-                     mmcbuffer[saveSDposition+delta++] = 0; //loggertestwert++;
-                     
-                     mmcbuffer[saveSDposition+delta++] = 0;
-                     mmcbuffer[saveSDposition+delta++] = 113; // end code
-                     // Data ab Byte HEADER_SIZE (8)
-                      // analoge Kanaele je 16bit
-                     mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG0]; 
-                     mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG0+1];
-                     mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG1]; // KTY
-                     mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG1+1];
-                     mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG2]; // PT1000
-                     mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG2+1];
-                     mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG3]; // 
-                     mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG3+1];
-                     
-                     //mmcbuffer[saveSDposition+delta++] = 78;
-                     //mmcbuffer[saveSDposition+delta++] = 79;
-                     
-                     // Test fuer Linearitaet
-                     
-                     uint8_t delta0 = delta;
-                     mmcbuffer[saveSDposition+delta++] = delta0++;
-                     mmcbuffer[saveSDposition+delta++] = 0;
-                     mmcbuffer[saveSDposition+delta++] = delta0++;
-                     mmcbuffer[saveSDposition+delta++] = 0;
-                     mmcbuffer[saveSDposition+delta++] = delta0++;
-                     mmcbuffer[saveSDposition+delta++] = 0;
-                     mmcbuffer[saveSDposition+delta++] = delta0++;
-                     mmcbuffer[saveSDposition+delta++] = 0;
-                     mmcbuffer[saveSDposition+delta++] = delta0++;
-                     mmcbuffer[saveSDposition+PACKET_SIZE-1] = delta0;
-                     
+                     if (devicenummer > 0)
+                     {
+                        uint8_t delta=0;
+                        
+                        mmcbuffer[saveSDposition+delta++] = devicenummer;
+                        mmcbuffer[saveSDposition+delta++] = wl_data[DEVICE];
+                        mmcbuffer[saveSDposition+delta++] = (messungcounter & 0x00FF);
+                        mmcbuffer[saveSDposition+delta++] = ((messungcounter & 0xFF00)>>8);
+                        
+                        mmcbuffer[saveSDposition+delta++] = kanalstatusarray[devicenummer];
+                        mmcbuffer[saveSDposition+delta++] = 0; //loggertestwert++;
+                        
+                        mmcbuffer[saveSDposition+delta++] = 0;
+                        mmcbuffer[saveSDposition+delta++] = 113; // end code
+                        // Data ab Byte HEADER_SIZE (8)
+                        // analoge Kanaele je 16bit
+                        mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG0]; 
+                        mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG0+1];
+                        mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG1]; // KTY
+                        mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG1+1];
+                        mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG2]; // PT1000
+                        mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG2+1];
+                        mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG3]; // 
+                        mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG3+1];
+                        
+                        //mmcbuffer[saveSDposition+delta++] = 78;
+                        //mmcbuffer[saveSDposition+delta++] = 79;
+                        
+                        // Test fuer Linearitaet
+                        
+                        uint8_t delta0 = delta;
+                        mmcbuffer[saveSDposition+delta++] = delta0++;
+                        mmcbuffer[saveSDposition+delta++] = 0;
+                        mmcbuffer[saveSDposition+delta++] = delta0++;
+                        mmcbuffer[saveSDposition+delta++] = 0;
+                        mmcbuffer[saveSDposition+delta++] = delta0++;
+                        mmcbuffer[saveSDposition+delta++] = 0;
+                        mmcbuffer[saveSDposition+delta++] = delta0++;
+                        mmcbuffer[saveSDposition+delta++] = 0;
+                        mmcbuffer[saveSDposition+delta++] = delta0++;
+                        mmcbuffer[saveSDposition+PACKET_SIZE-1] = delta0;
+                        
+                        sendbuffer[ANALOG0  + DATA_START_BYTE]= wl_data[ANALOG0]; // LM335
+                        sendbuffer[ANALOG0+1  + DATA_START_BYTE]= wl_data[ANALOG0+1];
+                        
+                        sendbuffer[ANALOG1  + DATA_START_BYTE]= wl_data[ANALOG1]; // KTY
+                        sendbuffer[ANALOG1+1  + DATA_START_BYTE]= wl_data[ANALOG1+1];
+                        
+                        sendbuffer[ANALOG2  + DATA_START_BYTE]= wl_data[ANALOG2]; // PT1000
+                        sendbuffer[ANALOG2+1  + DATA_START_BYTE]= wl_data[ANALOG2+1];
+                        
+                        sendbuffer[ANALOG3  + DATA_START_BYTE]= 0;//wl_data[ANALOG3]; // 
+                        sendbuffer[ANALOG3+1  + DATA_START_BYTE]= 0;//wl_data[ANALOG3+1];
+                        
+                        
+                        sendbuffer[USB_PACKETSIZE-1] = 81;
+                     }
                      
                   }
                   
@@ -1844,12 +1885,12 @@ int main (void)
                   // Testroutine
                   mmcwritecounter += 24; // Zaehlung write-Prozesse, 24 bytes pro device
                   
-                   saveSDposition += 24; // 8 bit Admin, 16 bit Data
+                  saveSDposition += 24; // 8 bit Admin, 16 bit Data
                   
                   
                   // neues Paket
                   // Daten ans Ende des Blocks schreiben
-                   
+                  
                   uint8_t delta = 0;
                   mmcbuffer[BLOCK_SIZE + delta++] = 0xFF; // Voller Block, Startblock: Gannzen block schreiben
                   mmcbuffer[BLOCK_SIZE + delta++] = 0xFF;
@@ -2047,6 +2088,9 @@ int main (void)
       
       /* **** end spi_buffer abfragen **************** */
       
+      uint16_t adcwert=0;
+      float adcfloat=0;
+
       // MARK:  MMC writenext
       //   if ((mmcstatus & (1<<WRITENEXT)) )
       if (mmcstatus & (1<<WRITENEXT) ) // in ISR gesetzt, beschreiben der disc mit random
@@ -2069,8 +2113,7 @@ int main (void)
          else
          {
             usbstatus = DEFAULT;
-         }
-         
+         }         
          mmcstatus &= ~(1<<WRITENEXT);
       }// test
       
@@ -2100,10 +2143,20 @@ int main (void)
          teensybuffer[ANALOG3  + DATA_START_BYTE]= homeadc & 0x00FF; // Kanal 10
          teensybuffer[ANALOG3+1  + DATA_START_BYTE]= (homeadc & 0xFF00)>>8;
           
-//         teensybuffer[0] = TEENSY_DATA;
+         teensybuffer[0] = TEENSY_DATA;
+         teensybuffer[6] = wl_callback_status; // bisheriger status
+         teensybuffer[DATACOUNT_LO_BYTE] = (messungcounter & 0x00FF);
+         teensybuffer[DATACOUNT_HI_BYTE] = ((messungcounter & 0xFF00)>>8);
+
+         adcwert = read_bat(0); // Batteriespannung
+         adcfloat = adcfloat *2490/1024; // kalibrierung VREF, 1V zu 0.999, Faktor 10, 45 us
+         adcwert = (((uint16_t)adcfloat)&0xFFFF);
          
-         uint8_t usberfolg = 0;
+         teensybuffer[USB_BATT_BYTE] = (uint8_t)(adcwert>>2);
+
          /*
+         uint8_t usberfolg = 0;
+        
          usberfolg = usb_rawhid_send((void*)teensybuffer, 100);
          if ((usberfolg != 0x20))
          {
@@ -2118,11 +2171,34 @@ int main (void)
       // **********************************************************
 #pragma mark Mess-Intervall
       // **********************************************************
-      uint16_t adcwert=0;
-      float adcfloat=0;
+//      uint16_t adcwert=0;
+//      float adcfloat=0;
 
       if (hoststatus & (1<<MESSUNG_OK)) // Intervall abgelaufen. Flag wird in ISR gesetzt. Jetzt Messungen vornehmen. Auftrag an wl, Daten zu senden
       {
+         uint8_t usberfolg = 0;
+         
+         
+         
+         
+         // neuer check
+   //      wl_callback_status_check = 1; // Teensy ist auf bit 0. in der callbackfunktion  wird fuer jedes device, das antwortet, ein bit geesetzt
+         
+         // teensy-daten abschicken
+         
+         teensybuffer[0] = TEENSY_DATA;
+         teensybuffer[2] = wl_callback_status_check; // bisheriger status
+         teensybuffer[DATACOUNT_LO_BYTE] = (messungcounter & 0x00FF);
+         teensybuffer[DATACOUNT_HI_BYTE] = ((messungcounter & 0xFF00)>>8);
+         
+         usberfolg = usb_rawhid_send((void*)teensybuffer, 50);
+         if ((usberfolg != 0x20))
+         {
+            lcd_gotoxy(12,2);
+            lcd_putc('T');
+            lcd_puthex(usberfolg);
+         }
+         
         
          sendbuffer[DEVICECOUNT_BYTE] = devicecount; // anz devicemitgeben
          devicecount=0;
@@ -2151,13 +2227,17 @@ int main (void)
          //lcd_putint1(wl_callback_status_check);
          sendbuffer[6] = wl_callback_status; // bisheriger status
          
+         
          // neuer check
          wl_callback_status = 0; // in der callbackfunktion  wird fuer jedes device, das antwortet, ein bit geesetzt
+
          
+          
          lcd_gotoxy(4,0);
          lcd_putint12(messungcounter);
          //lcd_putc(' ');
          
+         /*
          adcwert = read_bat(0); // Batteriespannung
          
          adcfloat = adcfloat *2490/1024; // kalibrierung VREF, 1V zu 0.999, Faktor 10, 45 us
@@ -2166,7 +2246,7 @@ int main (void)
          uint8_t battint = adcwert >> 2;
          // Batteriespannung senden
       //   sendbuffer[BATT + DATA_START_BYTE] = battint;
-
+          */
          sendbuffer[0]= MESSUNG_DATA;
           
          sendbuffer[DATA_START_BYTE] = 31; // Grenze zu DATA markieren
@@ -2637,15 +2717,18 @@ int main (void)
                lcd_gotoxy(16,2);
                lcd_putc('R');
                sendbuffer[0] = READ_START;
+               messungcounter = 0;
+           //    hoststatus |= (1<<USB_READ_OK);
                sendbuffer[30] = 73;
                lcd_putint1(wl_callback_status);
-               sendbuffer[2] = wl_callback_status_check;
+               sendbuffer[2] = wl_callback_status_check | 0x01; // teensy ist da
                sendbuffer[DEVICECOUNT_BYTE] = devicecount;
                uint8_t ind=0;
                for (ind = 0;ind  < WL_MAX_DEVICE;ind++)
                {
-                  sendbuffer[DATA_START_BYTE + ind] = devicebatteriespannung[ind];
+                  sendbuffer[DATA_START_BYTE + ind] = devicebatteriespannung[ind]; // kontrolle
                }
+               
             }break;
  
 //	*********************************************************************            
@@ -2669,7 +2752,7 @@ int main (void)
                   sendbuffer[DATA_START_BYTE + ind] = devicebatteriespannung[ind];
                   //             uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
                }
-
+               messungcounter = 0;
             }break;
 //	********************************************************************* 
 // MARK: LOGGER_START
