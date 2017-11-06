@@ -46,7 +46,7 @@
 // USB
 #define CPU_PRESCALE(n)	(CLKPR = 0x80, CLKPR = (n))
 
-#define VREF 259 // gemessene Vref
+#define VREF 250 // gemessene Vref
 
 
 #define LOOPDELAY 5
@@ -722,7 +722,7 @@ uint16_t read_LM35(uint8_t lm35kanal)
    return temperatur2 & 0xFFFF;
 }
 
-uint16_t read_bat(uint8_t batkanal)
+uint16_t read_bat(uint8_t batkanal) // im teensy kommt die halbe vBatt an
 {
    if (! (VREF_Quelle == ADC_REF_INTERNAL))
    {
@@ -735,12 +735,15 @@ uint16_t read_bat(uint8_t batkanal)
    }
    uint8_t i=0;
    uint16_t adc2wert = readKanal(batkanal);
+//  lcd_gotoxy(5,3);
+//  lcd_putint12(adc2wert);
+
    uint32_t temperatur2 = adc2wert;
    temperatur2 *=VREF;
    temperatur2 = temperatur2/0x20;
-   temperatur2 = 10*temperatur2/0x20;
+   temperatur2 = temperatur2/0x20;
    
-   //   lcd_gotoxy(8,3);
+    //  lcd_gotoxy(8,3);
    //   lcd_putint12(temperatur2&0xFFFF);
    return temperatur2 & 0xFFFF;
 }
@@ -1614,6 +1617,8 @@ int main (void)
                sendbuffer[DATA_START_BYTE -1] = 117;
                int devicenummer = wl_data[DEVICE]& 0x0F;
                int codenummer = wl_data[DEVICE]& 0xF0;
+               
+               
 
                devicebatteriespannung[devicenummer] = batteriespannung;
               // lcd_gotoxy(14,3);
@@ -1627,7 +1632,7 @@ int main (void)
                      
                   case 0:
                   {
-                      
+   
                     /* 
                      sendbuffer[USB_BATT_BYTE] = 17;
                      sendbuffer[DEVICE + DATA_START_BYTE] = 0; // teensy
@@ -2148,11 +2153,18 @@ int main (void)
          teensybuffer[DATACOUNT_LO_BYTE] = (messungcounter & 0x00FF);
          teensybuffer[DATACOUNT_HI_BYTE] = ((messungcounter & 0xFF00)>>8);
 
-         adcwert = read_bat(0); // Batteriespannung
+         adcwert = read_bat(0); // Batteriespannung / 2
+         double adcfloat = adcwert;
+         lcd_gotoxy(0,3);
+         lcd_putc('B');
+         lcd_putint(adcwert);
+        
          adcfloat = adcfloat *2490/1024; // kalibrierung VREF, 1V zu 0.999, Faktor 10, 45 us
-         adcwert = (((uint16_t)adcfloat)&0xFFFF);
-         
-         teensybuffer[USB_BATT_BYTE] = (uint8_t)(adcwert>>2);
+        // adcwert = (((uint16_t)adcfloat)&0xFFFF);
+//         lcd_putc(' ');
+//        lcd_putint(adcfloat);
+        
+         teensybuffer[USB_BATT_BYTE] = (uint8_t)(adcwert);
 
          /*
          uint8_t usberfolg = 0;
@@ -2186,11 +2198,17 @@ int main (void)
          
          // teensy-daten abschicken
          
-         teensybuffer[0] = TEENSY_DATA;
+    //     teensybuffer[0] = TEENSY_DATA;
+         teensybuffer[0] = MESSUNG_DATA;
+         
          teensybuffer[2] = wl_callback_status_check; // bisheriger status
          teensybuffer[DATACOUNT_LO_BYTE] = (messungcounter & 0x00FF);
          teensybuffer[DATACOUNT_HI_BYTE] = ((messungcounter & 0xFF00)>>8);
+         teensybuffer[BLOCKOFFSETLO_BYTE] = blockcounter & 0x00FF; // Byte 3, 4
+         teensybuffer[BLOCKOFFSETHI_BYTE] = (blockcounter & 0xFF00)>>8; // Nummer des geschriebenen Blocks hi
          
+         teensybuffer[DEVICE + DATA_START_BYTE] = 0; // Wer sendet Daten? Sollte Devicenummer sein
+
          usberfolg = usb_rawhid_send((void*)teensybuffer, 50);
          if ((usberfolg != 0x20))
          {
@@ -3093,8 +3111,11 @@ int main (void)
             {
                sendbuffer[0] = LOGGER_SETTING;
                usbstatus1 = recvbuffer[1];
+               
                intervall = recvbuffer[TAKT_LO_BYTE] | (recvbuffer[TAKT_HI_BYTE]<<8);
                
+               blockcounter = recvbuffer[BLOCKOFFSETLO_BYTE] | (recvbuffer[BLOCKOFFSETHI_BYTE]<<8);
+
                lcd_clr_line(1);
                lcd_gotoxy(0,1);
                lcd_putc('s');
