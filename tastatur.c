@@ -86,7 +86,7 @@ uint8_t tastencode(void)
    lcd_putc('T');
    lcd_putint12(Tastenwert);
 */
-   if (Tastenwert>23) // ca Minimalwert der Matrix
+   if (Tastenwert>5) // ca Minimalwert der Matrix
    {
       //         wdt_reset();
       /*

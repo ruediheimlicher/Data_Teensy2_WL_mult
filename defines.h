@@ -25,8 +25,8 @@
 #define OSZIB_HI OSZIPORT |= (1<<PULSB)
 #define OSZIB_TOGG OSZIPORT ^= (1<<PULSB)
 
-#define TASTATUR_PORT    PORTB
-#define TASTATUR_DDR     DDRB
+#define TASTATUR_PORT    PORTF
+#define TASTATUR_DDR     DDRF
 #define TASTATUR_PIN     4
 
 #define LOOPLEDDDR                  DDRD
@@ -255,21 +255,21 @@
 
 
 
-/*
+
  // Teensy2 int ref/TL431
  #define TASTE1		15
  #define TASTE2		23
  #define TASTE3		34
- #define TASTE4		51
- #define TASTE5		72
- #define TASTE6		94
- #define TASTE7		120
- #define TASTE8		141
- #define TASTE9		155
- #define TASTE_L	168
- #define TASTE0		178
- #define TASTE_R	194
- */
+ #define TASTE4		52
+ #define TASTE5		73
+ #define TASTE6		96
+ #define TASTE7		123
+ #define TASTE8		145
+ #define TASTE9		160
+ #define TASTE_L	173
+ #define TASTE0		183
+ #define TASTE_R	195
+ 
 /*
  // Teensy2 int ref/TL431
  #define TASTE1		15

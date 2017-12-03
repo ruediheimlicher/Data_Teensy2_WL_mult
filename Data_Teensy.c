@@ -558,7 +558,6 @@ void Master_Init(void)
     TASTENPORT |= (1<<TASTE0);	//Pull-up
     */
    TASTATUR_DDR &= ~(1<<TASTATUR_PIN); // input
-   TASTATUR_PORT &= ~(1<<TASTATUR_PIN);// LO
    
    DDRB &= ~(1<<4);
    
@@ -1146,6 +1145,7 @@ int main (void)
    
    initADC(0);
    
+   /*
    uint8_t outData = 25;
    char buffer[5]={};
    itoa(outData, buffer,16);
@@ -1153,6 +1153,7 @@ int main (void)
    lcd_putc(buffer[0]);
    lcd_putc(' ');
    lcd_putc(buffer[1]);
+    */
    // ---------------------------------------------------
    // in attach verschoben, nur wenn USB eingesteckt
    
@@ -1180,6 +1181,8 @@ int main (void)
          //hoststatus = 1;
          //lcd_gotoxy(19,3);
          //lcd_putc('$');
+         hoststatus &= ~(1<<MANUELL_OK); // MANUELL OFF
+         
          break;
          
       }
@@ -1202,8 +1205,9 @@ int main (void)
    }
    else
    {
-      lcd_putc('X');
+      lcd_putc('Y');
       hoststatus |= (1<<MANUELL_OK);
+      
    }
    /*
     lcd_putint12(usbwaitcounter);
@@ -1462,6 +1466,12 @@ int main (void)
       
       if (wl_spi_status & (1<<WL_ISR_RECV)) // in ISR gesetzt, ETWAS LOS AUF WL
       {
+         DDRF &= ~(1<<4); //ADC4
+         Tastenwert=(adc_read(4)>>2);
+         lcd_gotoxy(10,3);
+         lcd_putc('T');
+         lcd_putint(Tastenwert);
+
 /*
          DDRF &= ~(1<<1); //ADC1
          PORTF &= ~(1<<1);
@@ -1734,13 +1744,17 @@ int main (void)
 #pragma mark MMC Save 
                //	*********************************************************************                     
                lcd_gotoxy(6,2);
-               lcd_puts("     ");
+               lcd_puts("           ");
                
                if ((usbstatus1 & (1<<SAVE_SD_RUN_BIT)) || (hoststatus & (1<<MANUELL_OK)))// Daten in mmcbuffer speichern,                      
                {
+                  
                   lcd_gotoxy(16,3);
                   lcd_puthex(writemmccounter);
-                  
+                  if (hoststatus & (1<<MANUELL_OK))
+                  {
+                     lcd_putint1(devicenummer);
+                  }
                   blockdatacounter++; // weitere Messung auf aktuellem Block der MMC
                   
                   writemmccounter++; // TEST: weitere Messung auf MMC
@@ -1863,7 +1877,6 @@ int main (void)
                      
                      writeerr = mmc_disk_write ((void*)mmcbuffer,1 + blockcounter,1); // Block 1 ist system
                      // OSZIA_HI;
-                     
                      lcd_gotoxy(8,2);
                      lcd_puts("save ");
                      lcd_putint1(writeerr);
@@ -1907,7 +1920,6 @@ int main (void)
                   
                   writeerr = mmc_disk_write ((void*)mmcbuffer,1 + blockcounter,1); // Block 1 ist system
                   // OSZIA_HI;
-                  
                   lcd_gotoxy(8,2);
                   lcd_puts("resc ");
                   lcd_putint1(writeerr);
@@ -2073,10 +2085,28 @@ int main (void)
       {
          hoststatus &= ~(1<<ADC_OK);
          
+        
+         setupADC();
+         DDRB &= ~(1<<4);
          lcd_gotoxy(0,3);
          lcd_putc('T');
-         uint16_t homeadc = readKanal(1);  
-         lcd_putint2(homeadc>>2);
+         uint16_t homeadc = readKanal11(11)>>4;  
+         lcd_putint12(homeadc);
+         lcd_putc('*');
+         
+          // core temperatur
+      //   int t = getTemp();
+      //   lcd_gotoxy(10,2);
+       //  lcd_putint(t);
+         
+         DDRF &= ~(1<<4); //ADC4
+         Tastenwert=(adc_read(4)>>2);
+         lcd_gotoxy(10,3);
+         lcd_putc('T');
+         lcd_putint(Tastenwert);
+
+
+         
          teensybuffer[ANALOG0  + DATA_START_BYTE]= homeadc & 0x00FF; // Kanal 1
          teensybuffer[ANALOG0+1  + DATA_START_BYTE]= (homeadc & 0xFF00)>>8;
          //  lcd_puthex(teensybuffer[ANALOG0  + DATA_START_BYTE]);
@@ -2091,7 +2121,7 @@ int main (void)
          teensybuffer[ANALOG2  + DATA_START_BYTE]= homeadc & 0x00FF; // Kanal 10
          teensybuffer[ANALOG2+1  + DATA_START_BYTE]= (homeadc & 0xFF00)>>8;
          
-    //     homeadc = readKanal(11);
+         homeadc = readKanal(11);
           
          teensybuffer[ANALOG3  + DATA_START_BYTE]= homeadc & 0x00FF; // Kanal 11
          teensybuffer[ANALOG3+1  + DATA_START_BYTE]= (homeadc & 0xFF00)>>8;
@@ -2154,9 +2184,9 @@ int main (void)
          usberfolg = usb_rawhid_send((void*)teensybuffer, 50);
          if ((usberfolg != 0x20))
          {
-            lcd_gotoxy(12,2);
-            lcd_putc('T');
-            lcd_puthex(usberfolg);
+           // lcd_gotoxy(12,2);
+           // lcd_putc('T');
+            //lcd_puthex(usberfolg);
          }
          
          
@@ -2172,14 +2202,21 @@ int main (void)
          {
             hoststatus |= (1<< TEENSYPRESENT);
             //hoststatus = 1;
-            //lcd_gotoxy(19,3);
-            //lcd_putc('$');
+            lcd_gotoxy(19,0);
+            lcd_putc('$');
+            
+            hoststatus &= ~(1<<MANUELL_OK);
+            //lcd_gotoxy(18,3);
+            //lcd_putc('y');
+
          }
          else // Betrieb ohne host
          {
             if (hoststatus &(1<< TEENSYPRESENT)) // status war noch eingeschaltet: EEPROM lesen
             {
                hoststatus &= ~(1<< TEENSYPRESENT); // status reset, EEPROM nur einmal lesen
+               lcd_gotoxy(19,0);
+               lcd_putc('Z');
                
                // Intervall lesen
                intervall = eeprom_read_word(&eeprom_intervall);
@@ -2194,6 +2231,7 @@ int main (void)
             
                usbstatus1 &= ~(1<<SAVE_SD_STOP_BIT);
                usbstatus1 |= (1<<SAVE_SD_RUN_BIT);   // fortlaufendes Schreiben starten
+               hoststatus |= (1<<MANUELL_OK);
             }
          }
          hoststatus &= ~(1<<MESSUNG_OK);
@@ -2739,6 +2777,10 @@ int main (void)
                hoststatus |= (1<< TEENSYPRESENT);
                lcd_gotoxy(19,0);
                lcd_putc('$');
+               hoststatus &= ~(1<<MANUELL_OK);
+               //lcd_gotoxy(18,3);
+               //lcd_putc('x');
+               
                //hoststatus |= (1<<MESSUNG_OK); // Messung ausloesen
                sendbuffer[0] = CHECK_WL;
                sendbuffer[31] = 77;
@@ -2763,7 +2805,7 @@ int main (void)
                hoststatus &= ~(1<<MESSUNG_OK);
                hoststatus &= ~(1<<ADC_OK);
                hoststatus |= (1<<DOWNLOAD_OK); // Download von SD, Messungen unterbrechen
-               
+               hoststatus &= ~(1<<MANUELL_OK);
                lcd_clr_line(1);
                lcd_gotoxy(0,1);
                lcd_putc('l');
@@ -3147,8 +3189,6 @@ int main (void)
                sendbuffer[0] = MESSUNG_START;
                blockdatacounter = 0;            // Zaehler fuer Data auf dem aktuellen Block
                
-               lcd_gotoxy(8,2);
-               lcd_puts("     "); // Platz fuer save oder resc leeren
                
                
                /*
