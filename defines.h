@@ -25,8 +25,9 @@
 #define OSZIB_HI OSZIPORT |= (1<<PULSB)
 #define OSZIB_TOGG OSZIPORT ^= (1<<PULSB)
 
-
-
+#define TASTATUR_PORT    PORTB
+#define TASTATUR_DDR     DDRB
+#define TASTATUR_PIN     4
 
 #define LOOPLEDDDR                  DDRD
 #define LOOPLEDPORT                 PORTD
@@ -106,7 +107,7 @@
 #define USB_READ_OK        4
 #define ADC_OK             3
 #define USB_STOP_REQUEST   2
-
+#define MANUELL_OK         1
 
 // bits von spistatus
 
@@ -250,6 +251,8 @@
 
 #define HEADER_SIZE        0x08 // Header zu beginn der Loggerdaten
 #define BLOCK_SIZE         0x1E0 // Datenblock, 480 Bytes
+
+
 
 
 /*

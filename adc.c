@@ -34,6 +34,7 @@ void initADC(uint8_t derKanal)
 }
 
 
+
 int16_t adc_read(uint8_t derKanal)
 {
    uint16_t result = 0;
@@ -41,18 +42,17 @@ int16_t adc_read(uint8_t derKanal)
    ADCSRA = (1<<ADEN) | ADC_PRESCALER;             // enable ADC  f/64
    
    ADCSRB = (1<<ADHSM) | (derKanal & 0x20);             // high speed mode
-   //ADMUX = aref | (derKanal & 0x1F);                    // configure mux input
    
    ADMUX = ADC_REF_INTERNAL | (derKanal & 0x1F); // Interne Rev als Referenz
    
    ADCSRA |= (1<<ADSC);              // eine ADC-Wandlung (Der ADC setzt dieses Bit ja wieder auf 0 nach dem Wandeln)
-      
+   while (ADCSRA & (1<<ADSC)) ;                    // wait for result
    for(i=0;i<4;i++)
    {
       ADCSRA = (1<<ADEN) | (1<<ADPS2) | (1<<ADPS0) | (1<<ADSC); // start the conversion
       while (ADCSRA & (1<<ADSC)) ;                    // wait for result
       low = ADCL;                                     // must read LSB first
-      result +=(ADCH << 8) | low;
+      result +=((ADCH << 8) | low);
    }
    result /= 4;                     // Summe durch vier teilen = arithm. Mittelwert
    return result;
