@@ -171,7 +171,7 @@ volatile uint16_t                    writemmcstartcounter=0; // Anzahl mmc-write
 
 
 //static volatile uint8_t            substatus=0x00; // Tasks fuer Sub
-static volatile uint8_t             hoststatus=0x00;
+volatile uint8_t                    hoststatus=0x00;
 
 static volatile uint8_t             usbstatus=0x00;
 static volatile uint8_t             usbstatus1=0x00; // recvbuffer[1]
@@ -1205,7 +1205,7 @@ int main (void)
    else
    {
       lcd_putc('Y');
-      hoststatus |= (1<<MANUELL_OK);
+      //hoststatus |= (1<<MANUELL_OK);
       
    }
    /*
@@ -1456,30 +1456,33 @@ int main (void)
       loopcount0+=1;
       if ((loopcount0 & 0x2FF) == 0)
       {
-         DDRF &= ~(1<<4); //ADC4
-         //Tastenwert=(adc_read(4)>>2);
-         //lcd_putint(Tastenwert);
-         
-         uint8_t code = tastencode();
-         
-         //lcd_gotoxy(10,3);
-         if (code)
+         if (!(hoststatus & (1<<TEENSYPRESENT))) // tastatur nur ohne host
          {
-            lcd_gotoxy(10,3);
-            lcd_putc('T');
-            lcd_putint2(code);
-            tastaturcounter = 0;
-         }
-         else
-         {
-            tastaturcounter++;
-            if (tastaturcounter > 0xAF)
+            DDRF &= ~(1<<4); //ADC4
+            //Tastenwert=(adc_read(4)>>2);
+            //lcd_putint(Tastenwert);
+            
+            uint8_t code = tastencode();
+            
+            //lcd_gotoxy(10,3);
+            if (code)
             {
                lcd_gotoxy(10,3);
-               lcd_puts("   ");
-               tastaturcounter=0;
+               lcd_putc('T');
+               lcd_putint2(code);
+               tastaturcounter = 0;
             }
-         }
+            else
+            {
+               tastaturcounter++;
+               if (tastaturcounter > 0xAF)
+               {
+                  lcd_gotoxy(10,3);
+                  lcd_puts("   ");
+                  tastaturcounter=0;
+               }
+            }
+         }// end tastatur
       }
       // ********
       
@@ -1960,7 +1963,7 @@ int main (void)
                   lcd_puts("noHost");
                   
                   usbstatus1 &= ~(1<<SAVE_SD_RUN_BIT);   //  Schreiben so oder so beenden
-                  hoststatus |= (1<<MANUELL_OK);
+                 // hoststatus |= (1<<MANUELL_OK);
                
                }
                
@@ -2261,7 +2264,7 @@ int main (void)
             
                usbstatus1 &= ~(1<<SAVE_SD_STOP_BIT);
                usbstatus1 |= (1<<SAVE_SD_RUN_BIT);   // fortlaufendes Schreiben starten
-               hoststatus |= (1<<MANUELL_OK);
+               //hoststatus |= (1<<MANUELL_OK);
             }
          }
          hoststatus &= ~(1<<MESSUNG_OK);

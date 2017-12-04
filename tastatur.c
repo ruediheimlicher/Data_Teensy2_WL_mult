@@ -9,6 +9,8 @@
 
 #define TASTATUR_KANAL  11
 
+extern volatile uint8_t hoststatus;
+
 extern volatile uint8_t Tastaturwert;
 extern volatile uint16_t TastaturCount;
 extern volatile uint8_t Menu_Ebene;
@@ -163,7 +165,7 @@ uint8_t tastencode(void)
                
             case 2:                                 //   Menu vorwaertsschalten   
             {
-               lcd_cls();
+               //lcd_cls();
                /*
                 err_gotoxy(0,1);
                 err_puts("M:\0");
@@ -235,8 +237,15 @@ uint8_t tastencode(void)
                
             case 5:                        // Ebene tiefer
             {
+               lcd_gotoxy(19,3);
+               lcd_putc('M');
+               hoststatus |= (1<<MANUELL_OK);
+               
+               
+               
+               
                //Taste=99;
-               lcd_clr_line(1);
+               //lcd_clr_line(1);
                //lcd_gotoxy(0,1);
                //lcd_puts("Taste 5\0");
                //delay_ms(200);
@@ -329,10 +338,13 @@ uint8_t tastencode(void)
             }
                break;
                
-               //case 9:
-               
-               
-               //   break;
+               case 10:
+            {
+               hoststatus &= ~(1<<MANUELL_OK);    
+               lcd_gotoxy(19,3);
+               lcd_putc(' ');
+
+            } break;
                
                
             case 12:// Ebene hoeher
