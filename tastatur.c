@@ -65,7 +65,7 @@ uint8_t Tastenwahl(uint8_t Tastaturwert)
    if (Tastaturwert < TASTE_L)
       return 10;
    if (Tastaturwert < TASTE0)
-      return 0;
+      return 11; // entspricht 0
    if (Tastaturwert < TASTE_R)
       return 12;
    
@@ -79,13 +79,13 @@ uint8_t tastencode(void)
    //uint8_t TastaturCount=0;
    
    uint8_t Taste=0;
-   /*
-   Tastenwert=(readKanal(11)>>2);
+   
+   Tastenwert=(adc_read(4)>>2);
 
-   lcd_gotoxy(7,0);
-   lcd_putc('T');
-   lcd_putint12(Tastenwert);
-*/
+   //lcd_gotoxy(7,2);
+   //lcd_putc('T');
+   //lcd_putint(Tastenwert);
+
    if (Tastenwert>5) // ca Minimalwert der Matrix
    {
       //         wdt_reset();
@@ -104,7 +104,7 @@ uint8_t tastencode(void)
        12: Ebene höher
        */
       TastaturCount++;
-      if (TastaturCount>=2)   //   Prellen
+      if (TastaturCount>=2)   //   Prellen abgelaufen
       {
          
          //err_clr_line(1);
@@ -114,12 +114,14 @@ uint8_t tastencode(void)
          
          Taste=Tastenwahl(Tastenwert);
          
-         lcd_gotoxy(12,2);
-         lcd_puts("T:\0");
+         //lcd_gotoxy(12,2);
+         //lcd_puts("T:\0");
          //err_gotoxy(14,1);
-         lcd_putint(Tastenwert);
+         //lcd_putint(Tastenwert);
+         //lcd_putc(' ');
+         //lcd_putint2(Taste);
          /*
-          err_putint2(Taste);
+          lcd_putint2(Taste);
           //delay_ms(1200);
           //err_clr_line(1);
           */

@@ -346,8 +346,8 @@ volatile uint16_t                   datapendcounter=0; // Takt fuer write to SD
 #define BLINK_DIV 4 // timer0 1 Hz bei Teilung /4 in ISR 8 MHz
 
 
-
-volatile uint16_t                TastaturCount=0;
+volatile uint16_t                TastaturCount=0; // counter fuer prellen
+volatile uint16_t                tastaturcounter=0; // counter fuer entfernen der Anzeige
 volatile uint8_t                 Menu_Ebene = 0;
 
 volatile uint16_t                manuellcounter=0; // Counter fuer Timeout
@@ -1141,7 +1141,6 @@ int main (void)
    //lcd_cls();
    lcd_clr_line(0);
    
-   uint8_t TastaturCount=0;
    
    initADC(0);
    
@@ -1223,6 +1222,7 @@ int main (void)
    
    uint16_t loopcount0=0;
    uint16_t loopcount1=0;
+   
    /*
     Bit 0: 1 wenn wdt ausgelšst wurde
     */
@@ -1454,24 +1454,46 @@ int main (void)
       
       //Blinkanzeige
       loopcount0+=1;
-      if ((loopcount0 & 0xFF) == 0)
+      if ((loopcount0 & 0x2FF) == 0)
       {
-  //       clicktaste = tastencode();
-//         lcd_gotoxy(8,0);
-//         lcd_puthex(clicktaste);
-
+         DDRF &= ~(1<<4); //ADC4
+         //Tastenwert=(adc_read(4)>>2);
+         //lcd_putint(Tastenwert);
+         
+         uint8_t code = tastencode();
+         
+         //lcd_gotoxy(10,3);
+         if (code)
+         {
+            lcd_gotoxy(10,3);
+            lcd_putc('T');
+            lcd_putint2(code);
+            tastaturcounter = 0;
+         }
+         else
+         {
+            tastaturcounter++;
+            if (tastaturcounter > 0xAF)
+            {
+               lcd_gotoxy(10,3);
+               lcd_puts("   ");
+               tastaturcounter=0;
+            }
+         }
       }
       // ********
       
       
       if (wl_spi_status & (1<<WL_ISR_RECV)) // in ISR gesetzt, ETWAS LOS AUF WL
       {
+         
+         /*
          DDRF &= ~(1<<4); //ADC4
          Tastenwert=(adc_read(4)>>2);
          lcd_gotoxy(10,3);
          lcd_putc('T');
          lcd_putint(Tastenwert);
-
+          */
 /*
          DDRF &= ~(1<<1); //ADC1
          PORTF &= ~(1<<1);
@@ -1937,7 +1959,7 @@ int main (void)
                   lcd_gotoxy(6,2);
                   lcd_puts("noHost");
                   
-                   usbstatus1 &= ~(1<<SAVE_SD_RUN_BIT);   //  Schreiben so oder so beenden
+                  usbstatus1 &= ~(1<<SAVE_SD_RUN_BIT);   //  Schreiben so oder so beenden
                   hoststatus |= (1<<MANUELL_OK);
                
                }
@@ -2084,27 +2106,35 @@ int main (void)
       if (hoststatus & (1<<ADC_OK)) // in ISR gesetzt, wenn nichts anderes los ist
       {
          hoststatus &= ~(1<<ADC_OK);
-         
-        
          setupADC();
+         uint16_t homeadc = readKanal11(1)>>4; 
+        /*
+         
          DDRB &= ~(1<<4);
          lcd_gotoxy(0,3);
          lcd_putc('T');
          uint16_t homeadc = readKanal11(11)>>4;  
          lcd_putint12(homeadc);
          lcd_putc('*');
-         
+         */
           // core temperatur
       //   int t = getTemp();
       //   lcd_gotoxy(10,2);
        //  lcd_putint(t);
          
+         /*
          DDRF &= ~(1<<4); //ADC4
-         Tastenwert=(adc_read(4)>>2);
+         
+         uint8_t code = tastencode();
          lcd_gotoxy(10,3);
+         lcd_putint2(code);
+*/
+         /*
+         Tastenwert=(adc_read(4)>>2);
+          
          lcd_putc('T');
          lcd_putint(Tastenwert);
-
+*/
 
          
          teensybuffer[ANALOG0  + DATA_START_BYTE]= homeadc & 0x00FF; // Kanal 1
