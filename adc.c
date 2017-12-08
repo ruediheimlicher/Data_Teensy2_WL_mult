@@ -35,7 +35,7 @@ void initADC(uint8_t derKanal)
 
 
 
-int16_t adc_read(uint8_t derKanal)
+int16_t adc_read(uint8_t derKanal) 
 {
    uint16_t result = 0;
    uint8_t low, i ;
@@ -95,10 +95,7 @@ uint16_t readKanal11(uint8_t derKanal) //Unsere Funktion zum ADC-Channel aus les
    ADMUX = 0;
    ADMUX |= (1 << REFS1);  //Internal 2.56V Voltage Reference with external capacitor on AREF pin
    ADMUX |= (1 << REFS0);  //Internal 2.56V Voltage Reference with external capacitor on AREF pin
-   //ADMUX |= (1 << MUX5);  //Temperature Sensor - 100111
-   ADMUX |= (0 << MUX4);  //Temperature Sensor - 100111
-   ADMUX |= (0 << MUX3);  //Temperature Sensor - 100111
-   ADMUX |= (0 << MUX2);  //Temperature Sensor - 100111
+
    ADMUX |= (1 << MUX1);  //Temperature Sensor - 100011
    ADMUX |= (1 << MUX0);  //Temperature Sensor - 100111  
    ADMUX = 0xE3;
@@ -130,7 +127,8 @@ ADCSRA &= ~(1<<ADEN);             // ADC deaktivieren ("Enable-Bit" auf LOW setz
 // http://www.narkidae.com/research/atmega-core-temperature-sensor/
 // https://github.com/Synapseware/examples/blob/master/chip-data/atmega32u4.md
 // http://yopero-tech.blogspot.ch/2013/01/reading-12-adc-channels-on-atmega32u4.html
-void setupADC(){
+void setupADC()
+{
    
    //ADC Multiplexer Selection Register
    ADMUX = 0;

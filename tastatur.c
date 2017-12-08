@@ -14,7 +14,8 @@ extern volatile uint8_t hoststatus;
 extern volatile uint8_t Tastaturwert;
 extern volatile uint16_t TastaturCount;
 extern volatile uint8_t Menu_Ebene;
-
+extern void manuellmessung_start(void);
+extern void manuellmessung_stop(void);
 /*
  */
 //err_puthex(Tastenwert);
@@ -74,7 +75,7 @@ uint8_t Tastenwahl(uint8_t Tastaturwert)
    return -1;
 }
 
-uint8_t tastencode(void)
+uint8_t tastencode(uint8_t tastaturkanal)
 {
    uint16_t Tastenwert=0;
    
@@ -82,7 +83,7 @@ uint8_t tastencode(void)
    
    uint8_t Taste=0;
    
-   Tastenwert=(adc_read(4)>>2);
+   Tastenwert=(adc_read(tastaturkanal)>>2);
 
    //lcd_gotoxy(7,2);
    //lcd_putc('T');
@@ -240,7 +241,7 @@ uint8_t tastencode(void)
                lcd_gotoxy(19,3);
                lcd_putc('M');
                hoststatus |= (1<<MANUELL_OK);
-               
+               manuellmessung_start();
                
                
                
@@ -340,7 +341,8 @@ uint8_t tastencode(void)
                
                case 10:
             {
-               hoststatus &= ~(1<<MANUELL_OK);    
+               hoststatus &= ~(1<<MANUELL_OK); 
+               manuellmessung_stop();
                lcd_gotoxy(19,3);
                lcd_putc(' ');
 

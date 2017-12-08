@@ -105,8 +105,8 @@
 #define MESSUNG_OK         6
 #define DOWNLOAD_OK        5
 #define USB_READ_OK        4
-#define ADC_OK             3
-#define USB_STOP_REQUEST   2
+#define TEENSY_ADC_OK             3
+#define TEENSY_MMC_OK      2
 #define MANUELL_OK         1
 
 // bits von spistatus
@@ -136,7 +136,7 @@
 
 // USB buffer
 
-// Bits in usbstatus1
+// Bits in sd_status
 #define SAVE_SD_BIT        0
 #define SAVE_SD_RUN_BIT        1
 #define SAVE_SD_STOP_BIT        2
