@@ -1036,6 +1036,14 @@ uint8_t writelin(uint16_t wert)
 }
 // pi 3.14159 26535
 
+void clear_sendbuffer(void)
+{
+   for (int i=0;i<USB_PACKETSIZE;i++)
+   {
+      sendbuffer[i] = 0;
+   }
+
+}
 void manuellmessung_start(void)
 {
 //   hoststatus |= (1<<USB_READ_OK);
@@ -1944,8 +1952,6 @@ int main (void)
                       */                       
                      sendbuffer[USB_PACKETSIZE-1] = 81;
                   }
-                  
-                  
                   
                   
                   // Kontrolle
@@ -2900,6 +2906,7 @@ int main (void)
                //	*********************************************************************                
             case LOGGER_START:
             {
+               clear_sendbuffer();
                loggerstatus = 0;
                hoststatus &= ~(1<<MESSUNG_OK);
                hoststatus &= ~(1<<TEENSY_ADC_OK);
@@ -3026,6 +3033,7 @@ int main (void)
                //	*********************************************************************                            
             case LOGGER_CONT: // weiteres Paket lesen (Datenzeile)
             {
+               clear_sendbuffer();
                if (TEST)
                {
                   sendbuffer[0] = LOGGER_CONT;
@@ -3130,6 +3138,11 @@ int main (void)
                //	*********************************************************************                
             case LOGGER_NEXT: // Block an startblock + downloadblocknummer lesen
             {
+               for (int i=0;i<USB_PACKETSIZE;i++)
+               {
+                  sendbuffer[i] = 0;
+               }
+               //clear_sendbuffer();
                //lcd_clr_line(1);
                //lcd_gotoxy(0,1);
                //lcd_putc('n');
@@ -3186,7 +3199,7 @@ int main (void)
                 
                 delta++;
                 sendbuffer[DATA_START_BYTE + offset + delta] = mmcbuffer[BLOCK_SIZE + delta]; // messungcounter hi
-                */
+              */  
                
                //            uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
                
@@ -3424,7 +3437,7 @@ int main (void)
                //	*********************************************************************                
             case MESSUNG_STOP:
             {
-               
+            
                sendbuffer[0] = MESSUNG_STOP;
                hoststatus &= ~(1<<USB_READ_OK);
                
