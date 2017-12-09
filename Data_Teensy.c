@@ -2262,6 +2262,7 @@ int main (void)
       
       if (hoststatus & (1<<MESSUNG_OK)) // Intervall abgelaufen. Flag wird in ISR gesetzt. Jetzt Messungen vornehmen. Auftrag an wl, Daten zu senden
       {
+         
          uint8_t usberfolg = 0;
          
          // teensy-daten abschicken
@@ -3289,6 +3290,7 @@ int main (void)
                //	*********************************************************************                
             case LOGGER_SETTING:
             {
+               clear_sendbuffer();
                sendbuffer[0] = LOGGER_SETTING;
                sd_status = recvbuffer[1];
                
@@ -3342,6 +3344,7 @@ int main (void)
                //	********************************************************************* 
             case MESSUNG_START:
             {
+               clear_sendbuffer();
                cli();
                
                //uint8_t ee = eeprom_read_word(&eeprom_intervall);
@@ -3437,7 +3440,7 @@ int main (void)
                //	*********************************************************************                
             case MESSUNG_STOP:
             {
-            
+               clear_sendbuffer();
                sendbuffer[0] = MESSUNG_STOP;
                hoststatus &= ~(1<<USB_READ_OK);
                
