@@ -183,7 +183,6 @@
 
 
 #define DATA_START_BYTE    8    // erstes byte fuer Data auf USB
-
 #define HEADER_OFFSET      4     // Erstes Byte im Block nach BLOCK_SIZE: Daten, die bei LOGGER_NEXT uebergeben werden
 
 # define READ_ERR_BYTE  1

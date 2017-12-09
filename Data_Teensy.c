@@ -1495,29 +1495,29 @@ int main (void)
       {
          
          /*
-         DDRF &= ~(1<<4); //ADC4
-         Tastenwert=(adc_read(4)>>2);
-         lcd_gotoxy(10,3);
-         lcd_putc('T');
-         lcd_putint(Tastenwert);
+          DDRF &= ~(1<<4); //ADC4
+          Tastenwert=(adc_read(4)>>2);
+          lcd_gotoxy(10,3);
+          lcd_putc('T');
+          lcd_putint(Tastenwert);
           */
-/*
-         DDRF &= ~(1<<1); //ADC1
-         PORTF &= ~(1<<1);
-
-         Tastenwert=(adc_read(1)>>2);
-         lcd_gotoxy(7,0);
-         lcd_putc('T');
-         lcd_putint(Tastenwert);
-
-         DDRB &= ~(1<<4); // ADC 11
-         PORTB &= ~(1<<4);
-         
-         Tastenwert=(adc_read(11)>>2);
-         lcd_putc(' ');
-         lcd_putint(Tastenwert);
-      */
-       //  clicktaste = tastencode();
+         /*
+          DDRF &= ~(1<<1); //ADC1
+          PORTF &= ~(1<<1);
+          
+          Tastenwert=(adc_read(1)>>2);
+          lcd_gotoxy(7,0);
+          lcd_putc('T');
+          lcd_putint(Tastenwert);
+          
+          DDRB &= ~(1<<4); // ADC 11
+          PORTB &= ~(1<<4);
+          
+          Tastenwert=(adc_read(11)>>2);
+          lcd_putc(' ');
+          lcd_putint(Tastenwert);
+          */
+         //  clicktaste = tastencode();
          
          //lcd_gotoxy(8,0);
          //lcd_puthex(clicktaste);
@@ -1677,6 +1677,7 @@ int main (void)
                      lcd_gotoxy(0,3);
                      lcd_putc('A');
                      lcd_putint2((a2 & 0xFF));
+                     
                      sendbuffer[ANALOG3  + DATA_START_BYTE]= 0;//wl_data[ANALOG3]; // 
                      sendbuffer[ANALOG3+1  + DATA_START_BYTE]= 0;//wl_data[ANALOG3+1];
                      
@@ -1770,7 +1771,7 @@ int main (void)
                }// switch devicenummer
                
                // start mmc
-  #pragma mark MMC Save             
+#pragma mark MMC Save             
                //	********************************************************************* 
                // SD laden
                //	*********************************************************************                     
@@ -1779,6 +1780,94 @@ int main (void)
                
                if ((sd_status & (1<<SAVE_SD_RUN_BIT)) || (hoststatus & (1<<MANUELL_OK)))// Daten in mmcbuffer speichern,                      
                {
+                  // ****
+                  if (hoststatus & (1<<TEENSY_MMC_OK)) // teensy-daten bereit
+                  {
+                     uint8_t delta=0;
+                     lcd_gotoxy(6,3);
+                     lcd_putc('D');
+                     lcd_putint1(devicenummer);
+                     lcd_putc(' ');
+                     //lcd_gotoxy(8,3);
+                     lcd_putc('B');
+                     lcd_putint2(kanalstatusarray[devicenummer]);
+                     lcd_putc(' ');
+                     lcd_putint(homeADCArray[0] & 0x00FF);
+                     
+                     mmcbuffer[saveSDposition+delta++] = 0;  // teensy
+                     mmcbuffer[saveSDposition+delta++] = 0; //
+                     mmcbuffer[saveSDposition+delta++] = (messungcounter & 0x00FF);
+                     mmcbuffer[saveSDposition+delta++] = ((messungcounter & 0xFF00)>>8);
+                     
+                     //Byte 4
+                     mmcbuffer[saveSDposition+delta++] = kanalstatusarray[0]; // ist kanal aktiv
+                     // positionen fuellen bis byte 7
+                     mmcbuffer[saveSDposition+delta++] = 98; //
+                     mmcbuffer[saveSDposition+delta++] = 99;
+                     mmcbuffer[saveSDposition+delta++] = 117; // end code 
+                     
+                     delta = 8;
+                     mmcbuffer[saveSDposition+delta++] = homeADCArray[0] & (0x00FF); // LO
+                     mmcbuffer[saveSDposition+delta++] = (homeADCArray[0] && 0xFF00) >> 8; // HI
+                     mmcbuffer[saveSDposition+delta++] = homeADCArray[1] & (0x00FF); // LO
+                     mmcbuffer[saveSDposition+delta++] = (homeADCArray[1] && 0xFF00) >> 8; // HI
+                     mmcbuffer[saveSDposition+delta++] = homeADCArray[2] & (0x00FF); // LO
+                     mmcbuffer[saveSDposition+delta++] = (homeADCArray[2] && 0xFF00) >> 8; // HI
+                     mmcbuffer[saveSDposition+delta++] = homeADCArray[3] & (0x00FF); // LO
+                     mmcbuffer[saveSDposition+delta++] = (homeADCArray[3] && 0xFF00) >> 8; // HI
+                     
+                     hoststatus &= ~(1<<TEENSY_MMC_OK);
+                     
+                     
+                     mmcwritecounter += 24; // Zaehlung write-Prozesse, 24 bytes pro device
+                     
+                     saveSDposition += 24; // 8 bit Admin, 16 bit Data
+                     
+                     
+                     // neues Paket
+                     // Daten ans Ende des Blocks schreiben
+                     
+                     delta = 0;
+                     mmcbuffer[BLOCK_SIZE + delta++] = 0xFF; // Voller Block, Startblock: Gannzen block schreiben
+                     mmcbuffer[BLOCK_SIZE + delta++] = 0xFF;
+                     mmcbuffer[BLOCK_SIZE + delta++] = blockcounter & 0x00FF; // Nummer des geschriebenen Blocks lo
+                     mmcbuffer[BLOCK_SIZE + delta++] = (blockcounter & 0xFF00)>>8; // Nummer des geschriebenen Blocks hi
+                     
+                     if ((saveSDposition ) >= BLOCK_SIZE) // Block voll, 480 Bytes 
+                     {
+                        
+                        
+                        blockdatacounter = 0; //Zaheler resetten fuer neuen Block
+                        
+                        
+                        writeerr = mmc_disk_write ((void*)mmcbuffer,1 + blockcounter,1); // Block 1 ist system
+                        // OSZIA_HI;
+                        lcd_gotoxy(8,2);
+                        lcd_puts("save_t");
+                        lcd_putint1(writeerr);
+                        lcd_putc(' ');
+                        lcd_puthex(blockcounter);
+                        saveSDposition = 0;
+                        sendbuffer[BLOCKOFFSETLO_BYTE] = blockcounter & 0x00FF; // Nummer des geschriebenen Blocks lo
+                        sendbuffer[BLOCKOFFSETHI_BYTE] = (blockcounter & 0xFF00)>>8; // Nummer des geschriebenen Blocks hi
+                        
+                        blockcounter++;
+                        
+                     }
+                     
+                     
+                     // MMC Teensy end
+                     
+                     
+                     
+                     hoststatus |= (1<<TEENSY_MMC_OK); // Daten bei next gelegenheit in mmc schreiben
+                     
+                  } // if TEENSY_MMC_OK
+                  
+                  
+                  
+                  // ****
+                  
                   
                   lcd_gotoxy(16,3);
                   lcd_puthex(writemmccounter);
@@ -1792,142 +1881,70 @@ int main (void)
                   //lcd_gotoxy(7,3);
                   //lcd_putint12(saveSDposition); // 0 .. 255, pos im mmcbuffer, immer 2 byte pro messung
                   //lcd_putint(blockcounter);
-                  if (TEST)
+                  
+                   
+                  if (devicenummer > 0)
                   {
+                     uint8_t delta=0;
                      
-                     for (uint8_t pos = 8;pos<32;pos++) // buffer fuellen
-                     {
-                        loggertestwert += pos;
-                        mmcbuffer[saveSDposition + pos] = loggertestwert ;
-                        if (loggertestwert > 133)
-                        {
-                           loggertestwert = 0;
-                        }
-                     }
+                     mmcbuffer[saveSDposition+delta++] = devicenummer; 
+                     mmcbuffer[saveSDposition+delta++] = wl_data[DEVICE];
+                     mmcbuffer[saveSDposition+delta++] = (messungcounter & 0x00FF);
+                     mmcbuffer[saveSDposition+delta++] = ((messungcounter & 0xFF00)>>8);
+                     
+                     //Byte 4
+                     mmcbuffer[saveSDposition+delta++] = kanalstatusarray[devicenummer]; // ist kanal aktiv
+                     // positionen fuellen bis byte 7
+                     mmcbuffer[saveSDposition+delta++] = 112; //loggertestwert++;
+                     
+                     mmcbuffer[saveSDposition+delta++] = 112;
+                     mmcbuffer[saveSDposition+delta++] = 113; // end code 
+                     // Data ab Byte HEADER_SIZE (8)
+                     // analoge Kanaele je 16bit
+                     // begin data
+                     delta = 8;
+                     mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG0]; 
+                     mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG0+1];
+                     mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG1]; // KTY
+                     mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG1+1];
+                     mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG2]; // PT1000
+                     mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG2+1];
+                     mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG3]; // 
+                     mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG3+1];
+                     
+                     //mmcbuffer[saveSDposition+delta++] = 78;
+                     //mmcbuffer[saveSDposition+delta++] = 79;
+                     
+                     // Test fuer Linearitaet
+                     
+                     uint8_t delta0 = delta;
+                     mmcbuffer[saveSDposition+delta++] = delta0++;
+                     mmcbuffer[saveSDposition+delta++] = 0;
+                     mmcbuffer[saveSDposition+delta++] = delta0++;
+                     mmcbuffer[saveSDposition+delta++] = 0;
+                     mmcbuffer[saveSDposition+delta++] = delta0++;
+                     mmcbuffer[saveSDposition+delta++] = 0;
+                     mmcbuffer[saveSDposition+delta++] = delta0++;
+                     mmcbuffer[saveSDposition+delta++] = 0;
+                     mmcbuffer[saveSDposition+delta++] = delta0++;
+                     mmcbuffer[saveSDposition+PACKET_SIZE-1] = delta0;
+                     
+                     /*
+                      sendbuffer[ANALOG0  + DATA_START_BYTE]= wl_data[ANALOG0]; // LM335
+                      sendbuffer[ANALOG0+1  + DATA_START_BYTE]= wl_data[ANALOG0+1];
+                      
+                      sendbuffer[ANALOG1  + DATA_START_BYTE]= wl_data[ANALOG1]; // KTY
+                      sendbuffer[ANALOG1+1  + DATA_START_BYTE]= wl_data[ANALOG1+1];
+                      
+                      sendbuffer[ANALOG2  + DATA_START_BYTE]= wl_data[ANALOG2]; // PT1000
+                      sendbuffer[ANALOG2+1  + DATA_START_BYTE]= wl_data[ANALOG2+1];
+                      
+                      sendbuffer[ANALOG3  + DATA_START_BYTE]= 0;//wl_data[ANALOG3]; // 
+                      sendbuffer[ANALOG3+1  + DATA_START_BYTE]= 0;//wl_data[ANALOG3+1];
+                      */                       
+                     sendbuffer[USB_PACKETSIZE-1] = 81;
                   }
-                  else                       
-                  {
-                     
-                     if (hoststatus & (1<<TEENSY_MMC_OK)) // daten bereit
-                     {
-                        uint8_t delta=0;
-                        lcd_gotoxy(6,3);
-                        lcd_putc('D');
-                        lcd_putint1(devicenummer);
-                        lcd_putc(' ');
-                        //lcd_gotoxy(8,3);
-                        lcd_putc('B');
-                        lcd_putint2(kanalstatusarray[devicenummer]);
-                        lcd_putc(' ');
-                        lcd_putint(homeADCArray[0] & 0x00FF);
-                        
-                        mmcbuffer[saveSDposition+delta++] = 0;  // teensy
-                        mmcbuffer[saveSDposition+delta++] = 17;
-                        mmcbuffer[saveSDposition+delta++] = (messungcounter & 0x00FF);
-                        mmcbuffer[saveSDposition+delta++] = ((messungcounter & 0xFF00)>>8);
-                        
-                        //Byte 4
-                        mmcbuffer[saveSDposition+delta++] = kanalstatusarray[devicenummer]; // ist kanal aktiv
-                        // positionen fuellen bis byte 7
-                        mmcbuffer[saveSDposition+delta++] = 111; //
-                        
-                        mmcbuffer[saveSDposition+delta++] = 111;
-                        mmcbuffer[saveSDposition+delta++] = 117; // end code 
-                        
-                        delta = 8;
-                        mmcbuffer[saveSDposition+delta++] = homeADCArray[0] & (0x00FF); // LO
-                        mmcbuffer[saveSDposition+delta++] = (homeADCArray[0] && 0xFF00) >> 8; // HI
-                        mmcbuffer[saveSDposition+delta++] = homeADCArray[1] & (0x00FF); // LO
-                        mmcbuffer[saveSDposition+delta++] = (homeADCArray[1] && 0xFF00) >> 8; // HI
-                        mmcbuffer[saveSDposition+delta++] = homeADCArray[2] & (0x00FF); // LO
-                        mmcbuffer[saveSDposition+delta++] = (homeADCArray[2] && 0xFF00) >> 8; // HI
-                        mmcbuffer[saveSDposition+delta++] = homeADCArray[3] & (0x00FF); // LO
-                        mmcbuffer[saveSDposition+delta++] = (homeADCArray[3] && 0xFF00) >> 8; // HI
-
-                        hoststatus &= ~(1<<TEENSY_MMC_OK);
-                     }
-                     
-                      if (devicenummer > 0)
-                     {
-                        
-                        
-                        
-                        
-                        uint8_t delta=0;
-                        
-                        mmcbuffer[saveSDposition+delta++] = devicenummer; 
-                        mmcbuffer[saveSDposition+delta++] = wl_data[DEVICE];
-                        mmcbuffer[saveSDposition+delta++] = (messungcounter & 0x00FF);
-                        mmcbuffer[saveSDposition+delta++] = ((messungcounter & 0xFF00)>>8);
-                        
-                        //Byte 4
-                        mmcbuffer[saveSDposition+delta++] = kanalstatusarray[devicenummer]; // ist kanal aktiv
-                        
-                        /*
-                        lcd_gotoxy(6,3);
-                        lcd_putc('D');
-                        lcd_putint1(devicenummer);
-                        lcd_putc(' ');
-                        //lcd_gotoxy(8,3);
-                        lcd_putc('B');
-                        lcd_putint2(kanalstatusarray[devicenummer]);
-                        */
-                        
-                        // positionen fuellen bis byte 7
-                        mmcbuffer[saveSDposition+delta++] = 0; //loggertestwert++;
-                        
-                        mmcbuffer[saveSDposition+delta++] = 0;
-                        mmcbuffer[saveSDposition+delta++] = 113; // end code 
-                        // Data ab Byte HEADER_SIZE (8)
-                        // analoge Kanaele je 16bit
-                        // begin data
-                        delta = 8;
-                         mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG0]; 
-                        mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG0+1];
-                        mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG1]; // KTY
-                        mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG1+1];
-                        mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG2]; // PT1000
-                        mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG2+1];
-                        mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG3]; // 
-                        mmcbuffer[saveSDposition+delta++] = wl_data[ANALOG3+1];
-                        
-                        //mmcbuffer[saveSDposition+delta++] = 78;
-                        //mmcbuffer[saveSDposition+delta++] = 79;
-                        
-                        // Test fuer Linearitaet
-                        
-                        uint8_t delta0 = delta;
-                        mmcbuffer[saveSDposition+delta++] = delta0++;
-                        mmcbuffer[saveSDposition+delta++] = 0;
-                        mmcbuffer[saveSDposition+delta++] = delta0++;
-                        mmcbuffer[saveSDposition+delta++] = 0;
-                        mmcbuffer[saveSDposition+delta++] = delta0++;
-                        mmcbuffer[saveSDposition+delta++] = 0;
-                        mmcbuffer[saveSDposition+delta++] = delta0++;
-                        mmcbuffer[saveSDposition+delta++] = 0;
-                        mmcbuffer[saveSDposition+delta++] = delta0++;
-                        mmcbuffer[saveSDposition+PACKET_SIZE-1] = delta0;
-
-                        /*
-                        sendbuffer[ANALOG0  + DATA_START_BYTE]= wl_data[ANALOG0]; // LM335
-                        sendbuffer[ANALOG0+1  + DATA_START_BYTE]= wl_data[ANALOG0+1];
-                        
-                        sendbuffer[ANALOG1  + DATA_START_BYTE]= wl_data[ANALOG1]; // KTY
-                        sendbuffer[ANALOG1+1  + DATA_START_BYTE]= wl_data[ANALOG1+1];
-                        
-                        sendbuffer[ANALOG2  + DATA_START_BYTE]= wl_data[ANALOG2]; // PT1000
-                        sendbuffer[ANALOG2+1  + DATA_START_BYTE]= wl_data[ANALOG2+1];
-                        
-                        sendbuffer[ANALOG3  + DATA_START_BYTE]= 0;//wl_data[ANALOG3]; // 
-                        sendbuffer[ANALOG3+1  + DATA_START_BYTE]= 0;//wl_data[ANALOG3+1];
- */                       
-                        sendbuffer[USB_PACKETSIZE-1] = 81;
-                     }
-                     else // teensy
-                     {
- 
-                     }
-                  } // not test
+                  
                   
                   
                   
@@ -1973,7 +1990,7 @@ int main (void)
                      writeerr = mmc_disk_write ((void*)mmcbuffer,1 + blockcounter,1); // Block 1 ist system
                      // OSZIA_HI;
                      lcd_gotoxy(8,2);
-                     lcd_puts("save ");
+                     lcd_puts("save_D");
                      lcd_putint1(writeerr);
                      lcd_putc(' ');
                      lcd_puthex(blockcounter);
@@ -1993,8 +2010,8 @@ int main (void)
                   
                   uint8_t delta = 0;
                   // Daten am Ende des Blocks mitgeben (32 Bytes)
-                  mmcbuffer[BLOCK_SIZE + delta++] = blockdatacounter & 0x00FF;       // Anzahl Messungen auf letztem Block der SD
-                  mmcbuffer[BLOCK_SIZE + delta++] = (blockdatacounter & 0xFF00)>>8;  // Nummer des zuletzt geschriebenen Blocks hi
+                  mmcbuffer[BLOCK_SIZE + delta++] = blockdatacounter & 0x00FF;       // Anzahl Messungen auf letztem Block der SD lo
+                  mmcbuffer[BLOCK_SIZE + delta++] = (blockdatacounter & 0xFF00)>>8;  // Anzahl Messungen auf letztem Block der SD hi
                   
                   mmcbuffer[BLOCK_SIZE + delta++] = blockcounter & 0x00FF;   // Nummer des zuletzt geschriebenen Blocks lo
                   mmcbuffer[BLOCK_SIZE + delta++] = (blockcounter & 0xFF00)>>8; // Nummer des zuletzt geschriebenen Blocks hi
@@ -2033,8 +2050,8 @@ int main (void)
                   lcd_puts("noHost");
                   
                   sd_status &= ~(1<<SAVE_SD_RUN_BIT);   //  Schreiben so oder so beenden
-                 // hoststatus |= (1<<MANUELL_OK);
-               
+                  // hoststatus |= (1<<MANUELL_OK);
+                  
                }
                
                // end SDladen
@@ -2188,34 +2205,8 @@ int main (void)
          lcd_gotoxy(0,3);
          lcd_putc('T');
          lcd_putint12(homeADCArray[0]);
-        /*
          
-         DDRB &= ~(1<<4);
-         lcd_gotoxy(0,3);
-         lcd_putc('T');
-         uint16_t homeadc = readKanal11(11)>>4;  
-         lcd_putint12(homeadc);
-         lcd_putc('*');
-         */
-          // core temperatur
-      //   int t = getTemp();
-      //   lcd_gotoxy(10,2);
-       //  lcd_putint(t);
-         
-         /*
-         DDRF &= ~(1<<4); //ADC4
-         
-         uint8_t code = tastencode();
-         lcd_gotoxy(10,3);
-         lcd_putint2(code);
-*/
-         /*
-         Tastenwert=(adc_read(4)>>2);
-          
-         lcd_putc('T');
-         lcd_putint(Tastenwert);
-*/
-
+         devicenummer = 0;
          
          teensybuffer[ANALOG0  + DATA_START_BYTE]= homeADCArray[0] & 0x00FF; // Kanal 1
          teensybuffer[ANALOG0+1  + DATA_START_BYTE]= (homeADCArray[0] & 0xFF00)>>8;
@@ -2254,22 +2245,9 @@ int main (void)
          
          teensybuffer[USB_BATT_BYTE] = (uint8_t)(adcwert);
          
-         
-         devicenummer = 7;
-         /*
-          uint8_t usberfolg = 0;
-          
-          usberfolg = usb_rawhid_send((void*)teensybuffer, 100);
-          if ((usberfolg != 0x20))
-          {
-          lcd_gotoxy(12,2);
-          lcd_putc('T');
-          lcd_puthex(usberfolg);
-          }
-          */
-         hoststatus |= (1<<TEENSY_MMC_OK); // Daten bei next gelegenheit in mmc schreiben
-      }
-      
+         hoststatus |= (1<<TEENSY_MMC_OK);
+      }         
+       
       // **********************************************************
 #pragma mark Mess-Intervall
       // **********************************************************
@@ -2906,12 +2884,15 @@ int main (void)
                sendbuffer[DEVICECOUNT_BYTE] = devicecount;
                
                // Batteriespannung senden
-               uint8_t ind=0;
+               
+                uint8_t ind=0;
                for (ind = 0;ind  < WL_MAX_DEVICE;ind++)
                {
                   sendbuffer[DATA_START_BYTE + ind] = devicebatteriespannung[ind];
                   //             uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
                }
+                adcwert = read_bat(0); // Batteriespannung
+               sendbuffer[DATA_START_BYTE] = (uint8_t)(adcwert/2);
                messungcounter = 0;
             }break;
                //	********************************************************************* 
@@ -2925,7 +2906,7 @@ int main (void)
                hoststatus |= (1<<DOWNLOAD_OK); // Download von SD, Messungen unterbrechen
                hoststatus &= ~(1<<MANUELL_OK);
                lcd_clr_line(1);
-               lcd_gotoxy(0,1);
+               lcd_gotoxy(10,1);
                lcd_putc('l');
                lcd_putc(':');
                lcd_puthex(code);
@@ -2972,6 +2953,23 @@ int main (void)
                lcd_putc(' ');
                lcd_putint12(downloaddatacounter);
                
+               uint16_t logger_blockcount = eeprom_read_word(&eeprom_blockcount);
+               sendbuffer[23] = '*';
+               sendbuffer[24] = logger_blockcount & 0x00FF;
+               sendbuffer[25] = (logger_blockcount & 0xFF00)>>8;
+               
+               lcd_gotoxy(6,2);
+               lcd_puts("     ");
+
+               lcd_gotoxy(6,2);
+               lcd_putc('*');
+               lcd_putint(logger_blockcount & 0x00FF);
+               lcd_putc('*');
+               uint16_t logger_messungcount = eeprom_read_word(&eeprom_messungcount);
+               sendbuffer[26] = logger_messungcount & 0x00FF;
+               sendbuffer[27] = (logger_messungcount & 0xff00)>>8;
+               sendbuffer[28] = '*';                  
+
                //lcd_gotoxy(7,3);
                //lcd_puthex(downloaddatacounter);
                
@@ -2987,7 +2985,7 @@ int main (void)
                   if (TEST == 0)
                   {
                      sendbuffer[DATA_START_BYTE -1] = 111;
-                     sendbuffer[USB_PACKETSIZE-1] = 77;
+                     sendbuffer[USB_PACKETSIZE-1] = 87;
                   }
                   
                   // Header uebertragen, erste HEADER_SIZE bytes im Block. Nach DATA_STARTBYTE und HEADER_OFFSET
@@ -2997,7 +2995,9 @@ int main (void)
                   {
                      sendbuffer[DATA_START_BYTE + HEADER_OFFSET + headerindex] = mmcbuffer[BLOCK_SIZE  + headerindex];
                   }
-                  
+                  //#define DATA_START_BYTE    8    // erstes byte fuer Data auf USB
+                  //#define HEADER_OFFSET      4     // Erstes Byte im Block nach BLOCK_SIZE: Daten, die bei LOGGER_NEXT uebergeben werden
+
                   
                   
                   
@@ -3199,7 +3199,7 @@ int main (void)
                //	********************************************************************* 
             case LOGGER_STOP: // 0xAF
             {
-               hoststatus &= ~(1<<DOWNLOAD_OK); // Download von SD beendet, Messungen fortsetzen
+               hoststatus &= ~(1<<DOWNLOAD_OK); // Download von SD beendet, 
                //lcd_clr_line(1);
                lcd_clr_line(1);
                lcd_gotoxy(0,1);
@@ -3210,9 +3210,11 @@ int main (void)
                mmcwritecounter = 0;
                usbstatus = 0;
                sendbuffer[0] = LOGGER_STOP;
-               
                sendbuffer[PACKETCOUNT_BYTE] = 0; // packetcount
+               sendbuffer[BLOCKOFFSETLO_BYTE] = downloadblocknummer & 0x00FF;
+               sendbuffer[BLOCKOFFSETHI_BYTE] = (downloadblocknummer & 0xFF00)>>8;
                
+
             }break;
                //	*********************************************************************                
                // MARK: WRITE_MMC_TEST
@@ -3439,13 +3441,19 @@ int main (void)
                sendbuffer[BLOCKOFFSETLO_BYTE] = blockcounter & 0x00FF;
                sendbuffer[BLOCKOFFSETHI_BYTE] = (blockcounter & 0xFF00)>>8;
                
-               
                sendbuffer[DATACOUNT_LO_BYTE] = messungcounter & 0x00FF;
                sendbuffer[DATACOUNT_HI_BYTE] = (messungcounter & 0xFF00)>>8;
                
                
                
                sendbuffer[USB_PACKETSIZE-1] = 79;
+               
+               lcd_gotoxy(6,3);
+               lcd_putint(blockcounter & 0x00FF);
+
+               eeprom_update_word(&eeprom_blockcount,blockcounter);
+               eeprom_update_word(&eeprom_messungcount,messungcounter);
+               
                //          lcd_gotoxy(19,1);
                //         lcd_putc('+');
                //         lcd_gotoxy(12,1);
