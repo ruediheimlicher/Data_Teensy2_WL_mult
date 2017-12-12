@@ -112,7 +112,7 @@ volatile uint16_t                    intervall=1; // defaultwert, 1s
 // counter fuer Mess-Intervall
 volatile uint16_t                    messungcounter=0; // Anzahl messungen fortlaufend
 
-volatile uint16_t                    writemmccounter=0; // Anzahl mmc-writes fortlaufend
+volatile uint16_t                    writedatacounter=0; // Anzahl mmc-writes fortlaufend
 volatile uint16_t                    writemmcstartcounter=0; // Anzahl mmc-writes fortlaufend
 
 
@@ -1814,7 +1814,7 @@ int main (void)
                      mmcbuffer[saveSDposition+delta++] = 99;
                      mmcbuffer[saveSDposition+delta++] = 117; // end code 
                      
-                     delta = 8;
+                     delta = 8; // Beginn Data-Block, 24 bytes
                      mmcbuffer[saveSDposition+delta++] = homeADCArray[0] & (0x00FF); // LO
                      mmcbuffer[saveSDposition+delta++] = (homeADCArray[0] && 0xFF00) >> 8; // HI
                      mmcbuffer[saveSDposition+delta++] = homeADCArray[1] & (0x00FF); // LO
@@ -1823,6 +1823,11 @@ int main (void)
                      mmcbuffer[saveSDposition+delta++] = (homeADCArray[2] && 0xFF00) >> 8; // HI
                      mmcbuffer[saveSDposition+delta++] = homeADCArray[3] & (0x00FF); // LO
                      mmcbuffer[saveSDposition+delta++] = (homeADCArray[3] && 0xFF00) >> 8; // HI
+                     
+                     //writedatacounter
+                     mmcbuffer[saveSDposition+delta++] = writedatacounter; // fortlaufener counter
+                     mmcbuffer[saveSDposition+delta++] = 14; // Grenze
+
                      
                      hoststatus &= ~(1<<TEENSY_MMC_OK);
                      
@@ -1841,6 +1846,16 @@ int main (void)
                      mmcbuffer[BLOCK_SIZE + delta++] = blockcounter & 0x00FF; // Nummer des geschriebenen Blocks lo
                      mmcbuffer[BLOCK_SIZE + delta++] = (blockcounter & 0xFF00)>>8; // Nummer des geschriebenen Blocks hi
                      
+                     mmcbuffer[BLOCK_SIZE + delta++] = (messungcounter & 0x00FF);   // Gesamte Anzahl Messungen
+                     mmcbuffer[BLOCK_SIZE + delta++] = ((messungcounter & 0xFF00)>>8);
+                     
+                     mmcbuffer[BLOCK_SIZE + delta++] = (wl_callback_status_check);   // wl_callback_status
+                     
+                     mmcbuffer[BLOCK_SIZE + delta++] = 231;
+                     
+                     mmcbuffer[BLOCK_SIZE + delta++] = (intervall & 0x00FF);   // Intervall
+                     mmcbuffer[BLOCK_SIZE + delta++] = ((intervall & 0xFF00)>>8);
+
                      if ((saveSDposition ) >= BLOCK_SIZE) // Block voll, 480 Bytes 
                      {
                         
@@ -1878,14 +1893,17 @@ int main (void)
                   
                   
                   lcd_gotoxy(16,3);
-                  lcd_puthex(writemmccounter);
+                  lcd_puthex(writedatacounter);
                   if (hoststatus & (1<<MANUELL_OK))
                   {
                      lcd_putint1(devicenummer);
                   }
+                  
                   blockdatacounter++; // weitere Messung auf aktuellem Block der MMC
                   
-                  writemmccounter++; // TEST: weitere Messung auf MMC
+                  writedatacounter++; // TEST: weitere Messung auf MMC
+                  
+                  
                   //lcd_gotoxy(7,3);
                   //lcd_putint12(saveSDposition); // 0 .. 255, pos im mmcbuffer, immer 2 byte pro messung
                   //lcd_putint(blockcounter);
@@ -1926,6 +1944,9 @@ int main (void)
                      // Test fuer Linearitaet
                      
                      uint8_t delta0 = delta;
+                     //writedatacounter
+                     mmcbuffer[saveSDposition+delta++] = writedatacounter; // fortlaufener counter
+                     mmcbuffer[saveSDposition+delta++] = 13;
                      mmcbuffer[saveSDposition+delta++] = delta0++;
                      mmcbuffer[saveSDposition+delta++] = 0;
                      mmcbuffer[saveSDposition+delta++] = delta0++;
@@ -1933,8 +1954,8 @@ int main (void)
                      mmcbuffer[saveSDposition+delta++] = delta0++;
                      mmcbuffer[saveSDposition+delta++] = 0;
                      mmcbuffer[saveSDposition+delta++] = delta0++;
-                     mmcbuffer[saveSDposition+delta++] = 0;
-                     mmcbuffer[saveSDposition+delta++] = delta0++;
+                    // mmcbuffer[saveSDposition+delta++] = 0;
+                    // mmcbuffer[saveSDposition+delta++] = delta0++;
                      mmcbuffer[saveSDposition+PACKET_SIZE-1] = delta0;
                      
                      /*
@@ -1951,6 +1972,7 @@ int main (void)
                       sendbuffer[ANALOG3+1  + DATA_START_BYTE]= 0;//wl_data[ANALOG3+1];
                       */                       
                      sendbuffer[USB_PACKETSIZE-1] = 81;
+                     sendbuffer[USB_PACKETSIZE-2] = writedatacounter;
                   }
                   
                   
@@ -2350,17 +2372,7 @@ int main (void)
          lcd_putint(messungcounter);
          //lcd_putc(' ');
          
-         /*
-          adcwert = read_bat(0); // Batteriespannung
-          
-          adcfloat = adcfloat *2490/1024; // kalibrierung VREF, 1V zu 0.999, Faktor 10, 45 us
-          adcwert = (((uint16_t)adcfloat)&0xFFFF);
-          
-          uint8_t battint = adcwert >> 2;
-          // Batteriespannung senden
-          //   sendbuffer[BATT + DATA_START_BYTE] = battint;
-          */
-         sendbuffer[0]= MESSUNG_DATA;
+          sendbuffer[0]= MESSUNG_DATA;
          
          sendbuffer[DATA_START_BYTE] = 31; // Grenze zu DATA markieren
          
@@ -2698,45 +2710,6 @@ int main (void)
          if ((loopcount1%2 == 0) && (usbstatus & (1<<WRITEAUTO)))
          {
 
-            /*
-             _delay_ms(10);
-             uint16_t adcwert = adc_read(0);
-             _delay_ms(100);
-             
-             lcd_gotoxy(10,0);
-             lcd_putint(adcwert & 0x00FF);
-             lcd_putc(' ');
-             lcd_putint2((adcwert & 0xFF00)>>8);
-             
-             // adcwert *=10;
-             // vor Korrektur
-             sendbuffer[ADC0LO]= (adcwert & 0x00FF);
-             sendbuffer[ADC0HI]= ((adcwert & 0xFF00)>>8);
-             
-             //adcwert /= 2;
-             lcd_gotoxy(0,1);
-             //       lcd_putint12(adcwert/4); // *256/1024
-             //       lcd_putc(' ');
-             //OSZIA_LO;
-             double adcfloat = adcwert;
-             adcfloat = adcfloat *2490/1024; // kalibrierung VREF, 1V > 0.999, Faktor 10, 45 us
-             
-             adcwert = (((uint16_t)adcfloat)&0xFFFF);
-             //OSZIA_HI;
-             lcd_putint12(adcwert);
-             
-             */
-            //           sendbuffer[ADC0LO+2]= (adcwert & 0x00FF);
-            //           sendbuffer[ADC0HI+2]= ((adcwert & 0xFF00)>>8);
-            /*
-             lcd_putc(' ');
-             lcd_gotoxy(10,1);
-             lcd_putint(adcwert & 0x00FF);
-             lcd_putc(' ');
-             lcd_putint2((adcwert & 0xFF00)>>8);
-             lcd_putc('*');
-             lcd_puthex(usb_configured());
-             */
          }
          
          if(loopcount1%32 == 0)
@@ -2874,6 +2847,7 @@ int main (void)
                
             case CHECK_WL:
             {
+               clear_sendbuffer();
                lcd_gotoxy(17,0);
                lcd_putc('W');
                hoststatus |= (1<< TEENSYPRESENT);
@@ -2888,18 +2862,19 @@ int main (void)
                sendbuffer[31] = 77;
                //lcd_putint1(wl_callback_status);
                sendbuffer[2] = wl_callback_status_check;
-               sendbuffer[DEVICECOUNT_BYTE] = devicecount;
+               sendbuffer[DEVICECOUNT_BYTE] = devicecount; // 3
                
                // Batteriespannung senden
-               
+               adcwert = read_bat(0); // Batteriespannung
+               devicebatteriespannung[0] = (uint8_t)(adcwert/2);
                 uint8_t ind=0;
                for (ind = 0;ind  < WL_MAX_DEVICE;ind++)
                {
                   sendbuffer[DATA_START_BYTE + ind] = devicebatteriespannung[ind];
                   //             uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
                }
-                adcwert = read_bat(0); // Batteriespannung
-               sendbuffer[DATA_START_BYTE] = (uint8_t)(adcwert/2);
+               
+               //sendbuffer[DATA_START_BYTE] = (uint8_t)(adcwert/2);
                messungcounter = 0;
             }break;
                //	********************************************************************* 
@@ -2996,7 +2971,7 @@ int main (void)
                      sendbuffer[USB_PACKETSIZE-1] = 87;
                   }
                   
-                  // Header uebertragen, erste HEADER_SIZE bytes im Block. Nach DATA_STARTBYTE und HEADER_OFFSET
+                  // Header uebertragen, HEADER_SIZE bytes nach BLOCK_SIZE im Block. Schreiben nach DATA_STARTBYTE + HEADER_OFFSET
                   
                   uint8_t headerindex=0;
                   for (headerindex = 0;headerindex < 10;headerindex++)
@@ -3074,42 +3049,31 @@ int main (void)
                   //lcd_putc('c');
                   // lcd_putc(':');
                   sendbuffer[0] = LOGGER_CONT;
-                  
-                  sendbuffer[USB_PACKETSIZE-1] = 74;
-                  
-                  
-                  sd_status = recvbuffer[1];
+                   sd_status = recvbuffer[1];
                   packetcount = recvbuffer[PACKETCOUNT_BYTE];
-                  
-                  
-                  
                   uint8_t paketindex = 0;
                   
                   if (downloadblocknummer == 0 && packetcount == 0) // Start Logging
                   {
+                     writedatacounter = 0;
                      // writemmcstartcounter++;
                      //lcd_gotoxy(13,3);
                      //lcd_puthex(writemmcstartcounter);
-                     
-                     
-                     
-                     // Daten in mmcbuffer ab index (packetcount*PACKET_SIZE) lesen    
+                      // Daten in mmcbuffer ab index (packetcount*PACKET_SIZE) lesen    
                      for (paketindex=0;paketindex< PACKET_SIZE;paketindex++) // PACKET_SIZE: 24 bytes fuer sendbuffer
                      {
                         
                         //                        lcd_gotoxy(18,3);
                         //                       lcd_putc(65); // Kontrolle: A
-                        // Header ist schon geladen, Breite ist HEADER_SIZE (8)
-                        //sendbuffer[DATA_START_BYTE + paketindex] = mmcbuffer[HEADER_SIZE + (packetcount*PACKET_SIZE)+paketindex];
-                        sendbuffer[DATA_START_BYTE + paketindex] = mmcbuffer[(packetcount*PACKET_SIZE)+paketindex];
+                         sendbuffer[DATA_START_BYTE + paketindex] = mmcbuffer[(packetcount*PACKET_SIZE)+paketindex];
                      }
                      
                   }
                   else
                   {
-                     writemmccounter++;
+                     writedatacounter++;
                      //                    lcd_gotoxy(15,3);
-                     //                    lcd_puthex(writemmccounter);
+                     //                    lcd_puthex(writedatacounter);
                      
                      
                      
@@ -3119,7 +3083,7 @@ int main (void)
                      // Daten in mmcbuffer ab index (packetcount*PACKET_SIZE) lesen
                      for (paketindex=0;paketindex< PACKET_SIZE;paketindex++) // 24 bytes fuer sendbuffer
                      {
-                        // Breite ist HEADER_SIZE (8)
+                       
                         sendbuffer[DATA_START_BYTE + paketindex] = mmcbuffer[(packetcount*PACKET_SIZE)+paketindex];
                      }
                   }
@@ -3127,6 +3091,8 @@ int main (void)
                   // packetcount mitgeben und incrementieren
                   sendbuffer[PACKETCOUNT_BYTE] = ++packetcount; // Byte 2
                   
+                  sendbuffer[USB_PACKETSIZE-1] = 74;
+                  sendbuffer[USB_PACKETSIZE-2] = writedatacounter;
                   //              uint8_t usberfolg = usb_rawhid_send((void*)sendbuffer, 50);
                   
                   //lcd_gotoxy(18,2);
@@ -3160,8 +3126,7 @@ int main (void)
                
                lcd_gotoxy(18,3);
                lcd_puthex(downloadblocknummer);
-               
-               
+                              
                // Beim Start Block aus SD lesen
                readerr = mmc_disk_read((void*)mmcbuffer,1+ startblock + downloadblocknummer,1);
                if (readerr == 0)
@@ -3169,14 +3134,13 @@ int main (void)
                   lcd_gotoxy(19,1);
                   lcd_putc('+');
                   
-                  // Header uebertragen, erste HEADER_SIZE bytes im Block
+                  // Header uebertragen, letzte HEADER_SIZE bytes im Block
+                  
                   uint8_t headerindex=0;
-                  for (headerindex = 0;headerindex < 10;headerindex++)
+                  for (headerindex = 0;headerindex < HEADER_SIZE;headerindex++)
                   {
-                     sendbuffer[DATA_START_BYTE + HEADER_OFFSET + headerindex] = mmcbuffer[BLOCK_SIZE  + headerindex];
+                     sendbuffer[DATA_START_BYTE + HEADER_OFFSET + headerindex] = mmcbuffer[BLOCK_SIZE + headerindex];
                   }
-                  
-                  
                } // if readerr==0
                else
                {
@@ -3290,7 +3254,7 @@ int main (void)
                //	*********************************************************************                
             case LOGGER_SETTING:
             {
-               clear_sendbuffer();
+               //clear_sendbuffer();
                sendbuffer[0] = LOGGER_SETTING;
                sd_status = recvbuffer[1];
                
@@ -3344,7 +3308,7 @@ int main (void)
                //	********************************************************************* 
             case MESSUNG_START:
             {
-               clear_sendbuffer();
+ //              clear_sendbuffer();
                cli();
                
                //uint8_t ee = eeprom_read_word(&eeprom_intervall);
@@ -3354,7 +3318,7 @@ int main (void)
                messungcounter = 0;
                sendbuffer[0] = MESSUNG_START;
                blockdatacounter = 0;            // Zaehler fuer Data auf dem aktuellen Block
-               
+               writedatacounter = 0;
                
                
                /*
@@ -3440,7 +3404,7 @@ int main (void)
                //	*********************************************************************                
             case MESSUNG_STOP:
             {
-               clear_sendbuffer();
+ //              clear_sendbuffer();
                sendbuffer[0] = MESSUNG_STOP;
                hoststatus &= ~(1<<USB_READ_OK);
                
