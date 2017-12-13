@@ -248,7 +248,7 @@
 
 #define PACKET_SIZE        0x18 // 24 bytes fuer USB-Transfer
 
-#define HEADER_SIZE        0x08 // Header zu beginn der Loggerdaten
+#define HEADER_SIZE        0x0A // Header zu beginn der Loggerdaten
 #define BLOCK_SIZE         0x1E0 // Datenblock, 480 Bytes
 
 

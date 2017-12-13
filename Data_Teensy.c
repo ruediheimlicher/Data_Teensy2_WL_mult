@@ -93,7 +93,7 @@ volatile uint8_t                    out_taskcounter=0;
 
 volatile  uint16_t                  mmcwritecounter=0; // Zaehler fuer Messungen auf SD
 
-
+volatile uint16_t                   linecounter=0;
 
 volatile uint16_t                   startblock = 0;
 
@@ -149,6 +149,9 @@ volatile uint16_t saveSDposition = 0;
 volatile uint16_t blockcounter = 0; // Block, in den gesichert werden soll, mit einem Offset von 1 (Block 0 ist header der SD).
 volatile uint16_t blockoffset = 1;
 volatile uint16_t blockdatacounter = 0; //  Anzahl gespeicherter Messungen auf aktuellem Block. Fuer rescue verwendet
+
+volatile uint16_t teensydatacounter = 0; //  Anzahl gespeicherter Messungen auf aktuellem Block. Fuer rescue verwendet
+
 
 uint16_t eeprom_intervall EEMEM = 1; // default intervall
 uint16_t eeprom_startblock EEMEM = 1; // default startblock
@@ -1613,6 +1616,7 @@ int main (void)
                //lcd_puts("     ");
                
                wl_callback_status |= (1<<0);
+               //sendbuffer[ANALOG3 + DATA_START_BYTE + 1]= linecounter++;
                switch(devicenummer)
                {
                      
@@ -1672,6 +1676,7 @@ int main (void)
                       lcd_puthex(wl_data[12]);
                       lcd_puthex(wl_data[13]);
                       */
+                     
                      sendbuffer[ANALOG0  + DATA_START_BYTE]= wl_data[ANALOG0]; // LM335
                      sendbuffer[ANALOG0+1  + DATA_START_BYTE]= wl_data[ANALOG0+1];
                      
@@ -1681,11 +1686,12 @@ int main (void)
                      sendbuffer[ANALOG2  + DATA_START_BYTE]= wl_data[ANALOG2]; // PT1000
                      sendbuffer[ANALOG2+1  + DATA_START_BYTE]= wl_data[ANALOG2+1];
                      
+                     /*
                      uint16_t a2 = wl_data[ANALOG2] | (wl_data[ANALOG2+1]<<8);
                      lcd_gotoxy(0,3);
                      lcd_putc('A');
                      lcd_putint2((a2 & 0xFF));
-                     
+                     */
                      sendbuffer[ANALOG3  + DATA_START_BYTE]= 0;//wl_data[ANALOG3]; // 
                      sendbuffer[ANALOG3+1  + DATA_START_BYTE]= 0;//wl_data[ANALOG3+1];
                      
@@ -1760,6 +1766,7 @@ int main (void)
                      
                      loggerstatus |= (1<<logpend); // ein mal senden
                      
+                     
                   }break; // ADC12BIT
                      
                   case 3:
@@ -1789,6 +1796,8 @@ int main (void)
                if ((sd_status & (1<<SAVE_SD_RUN_BIT)) || (hoststatus & (1<<MANUELL_OK)))// Daten in mmcbuffer speichern,                      
                {
                   // ****
+                  writedatacounter++; // TEST: weitere Messung auf MMC
+
                   if (hoststatus & (1<<TEENSY_MMC_OK)) // teensy-daten bereit
                   {
                      uint8_t delta=0;
@@ -1815,7 +1824,8 @@ int main (void)
                      mmcbuffer[saveSDposition+delta++] = 117; // end code 
                      
                      delta = 8; // Beginn Data-Block, 24 bytes
-                     mmcbuffer[saveSDposition+delta++] = homeADCArray[0] & (0x00FF); // LO
+                    
+                     mmcbuffer[saveSDposition+delta++] = (homeADCArray[0] & (0x00FF))  ; // LO
                      mmcbuffer[saveSDposition+delta++] = (homeADCArray[0] && 0xFF00) >> 8; // HI
                      mmcbuffer[saveSDposition+delta++] = homeADCArray[1] & (0x00FF); // LO
                      mmcbuffer[saveSDposition+delta++] = (homeADCArray[1] && 0xFF00) >> 8; // HI
@@ -1901,7 +1911,6 @@ int main (void)
                   
                   blockdatacounter++; // weitere Messung auf aktuellem Block der MMC
                   
-                  writedatacounter++; // TEST: weitere Messung auf MMC
                   
                   
                   //lcd_gotoxy(7,3);
@@ -2236,7 +2245,7 @@ int main (void)
          
          devicenummer = 0;
          
-         teensybuffer[ANALOG0  + DATA_START_BYTE]= homeADCArray[0] & 0x00FF; // Kanal 1
+         teensybuffer[ANALOG0  + DATA_START_BYTE]= (homeADCArray[0] & 0x00FF); // Kanal 1
          teensybuffer[ANALOG0+1  + DATA_START_BYTE]= (homeADCArray[0] & 0xFF00)>>8;
          //  lcd_puthex(teensybuffer[ANALOG0  + DATA_START_BYTE]);
          // lcd_puthex(teensybuffer[ANALOG0+1  + DATA_START_BYTE]);
@@ -2293,7 +2302,7 @@ int main (void)
          teensybuffer[0] = MESSUNG_DATA;
          
          teensybuffer[2] = wl_callback_status_check; // bisheriger status
-         teensybuffer[DATACOUNT_LO_BYTE] = (messungcounter & 0x00FF);
+         teensybuffer[DATACOUNT_LO_BYTE] = (messungcounter & 0x00FF) ;
          teensybuffer[DATACOUNT_HI_BYTE] = ((messungcounter & 0xFF00)>>8);
          teensybuffer[BLOCKOFFSETLO_BYTE] = blockcounter & 0x00FF; // Byte 3, 4
          teensybuffer[BLOCKOFFSETHI_BYTE] = (blockcounter & 0xFF00)>>8; // Nummer des geschriebenen Blocks hi
@@ -2884,6 +2893,7 @@ int main (void)
             {
                clear_sendbuffer();
                loggerstatus = 0;
+               hoststatus &= ~(1<<USB_READ_OK);
                hoststatus &= ~(1<<MESSUNG_OK);
                hoststatus &= ~(1<<TEENSY_ADC_OK);
                hoststatus |= (1<<DOWNLOAD_OK); // Download von SD, Messungen unterbrechen
@@ -2930,12 +2940,14 @@ int main (void)
                
                downloaddatacounter = recvbuffer[DATACOUNT_LO_BYTE] | (recvbuffer[DATACOUNT_HI_BYTE]<<8); // 
                
+               /*
                lcd_gotoxy(6,2);
                lcd_puts("load ");
                lcd_putint2(blockanzahl);
                lcd_putc(' ');
                lcd_putint12(downloaddatacounter);
-               
+               */
+                
                uint16_t logger_blockcount = eeprom_read_word(&eeprom_blockcount);
                sendbuffer[23] = '*';
                sendbuffer[24] = logger_blockcount & 0x00FF;
@@ -3319,6 +3331,7 @@ int main (void)
                sendbuffer[0] = MESSUNG_START;
                blockdatacounter = 0;            // Zaehler fuer Data auf dem aktuellen Block
                writedatacounter = 0;
+               linecounter=0;
                
                
                /*
