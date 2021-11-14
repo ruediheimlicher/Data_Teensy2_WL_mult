@@ -2362,6 +2362,7 @@ int main (void)
                //hoststatus |= (1<<MANUELL_OK);
             }
          }
+         
          hoststatus &= ~(1<<MESSUNG_OK);
          lcd_gotoxy(8,0);
          lcd_puthex(hoststatus);
@@ -2376,7 +2377,7 @@ int main (void)
          wl_callback_status = 0; // in der callbackfunktion  wird fuer jedes device, das antwortet, ein bit geesetzt
          
          
-         
+#pragma mark MESSUNG_DATA        
          lcd_gotoxy(4,0);
          lcd_putint(messungcounter);
          //lcd_putc(' ');
@@ -3315,9 +3316,9 @@ int main (void)
                 */
             }break;
                
-               //	*********************************************************************    
-               // MARK: MESSUNG_START
-               //	********************************************************************* 
+            //	*********************************************************************    
+            // MARK: MESSUNG_START
+            //	********************************************************************* 
             case MESSUNG_START:
             {
  //              clear_sendbuffer();
